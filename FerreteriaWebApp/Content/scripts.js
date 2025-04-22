@@ -1,8 +1,8 @@
 ﻿(function ($) {
-    "use strict"; // Start of use strict
+    "use strict"; 
 
     var $sidebar = $(".sidebar");
-    var sidebarBaseWidth = "15rem"; // Asegúrate de que coincida con tu SCSS
+    var sidebarBaseWidth = "15rem"; // SCSS
     var isSidebarVisible = true;
 
     // Función para alternar la visibilidad del sidebar
@@ -14,7 +14,7 @@
             $sidebar.addClass("toggled");       // Opcional: mantener la clase para otros estilos
         } else {
             $sidebar.css("width", sidebarBaseWidth);
-            $sidebar.css("overflow", "visible"); // O "" si no quieres ocultar el overflow
+            $sidebar.css("overflow", "visible"); 
             $("body").removeClass("sidebar-toggled"); // Opcional
             $sidebar.removeClass("toggled");      // Opcional
         }
@@ -26,7 +26,6 @@
         toggleSidebar();
     });
 
-    // Opcional: Considerar el resize de la ventana (similar al código original)
     $(window).resize(function () {
         if ($(window).width() < 768 && isSidebarVisible) {
             $sidebar.css("width", "0").css("overflow", "hidden");
@@ -41,6 +40,5 @@
         }
     });
 
-    // ... (El resto de tu JavaScript para otras funcionalidades)
 
-})(jQuery); // End of use strict
+})(jQuery); 
