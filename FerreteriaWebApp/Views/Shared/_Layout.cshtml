@@ -7,7 +7,7 @@
     <title>@ViewBag.Title - My ASP.NET Application</title>
     @Styles.Render("~/Content/css")
     <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 
 <body id="page-top">
@@ -16,30 +16,87 @@
     <div id="wrapper">
 
         <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark" id="">
             <!-- Brand and Sidebar Items -->
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
                 <div class="sidebar-brand-icon rotate-n-15">
                     <i class="fas fa-laugh-wink"></i>
                 </div>
-                <div class="sidebar-brand-text mx-3">SB Admin <sup>2</sup></div>
+                <div class="sidebar-brand-text mx-3">Ferretería <sup></sup></div>
             </a>
             <!-- Sidebar menu items -->
-            <!-- (Add the rest of your sidebar content here) -->
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-toggle="" data-target="#"
+                   aria-expanded="" aria-controls="">
+                    <i class="fas fa-circle-user"></i>
+                    <span>Clientes</span>
+                </a>
+            </li>
 
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseComponents"
-                   aria-expanded="true" aria-controls="collapseComponents">
-                    <i class="fas fa-fw fa-cog"></i>
-                    <span>Components</span>
+                <a class="nav-link " href="#" data-toggle="" data-target="#"
+                   aria-expanded="true" aria-controls="">
+                    <i class="fa-solid fa-sack-dollar"></i>
+                    <span>Formas de Pago</span>
                 </a>
-                <div id="collapseComponents" class="collapse" aria-labelledby="headingComponents" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="#">Buttons</a>
-                        <a class="collapse-item" href="#">Cards</a>
-                    </div>
-                </div>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link " href="#" data-toggle="" data-target="#"
+                   aria-expanded="true" aria-controls="">
+                    <i class="fa-solid fa-address-card"></i>
+                    <span>Empleados</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-toggle="" data-target="#"
+                   aria-expanded="true" aria-controls="">
+                    <i class="fa-solid fa-puzzle-piece"></i>
+                    <span>Roles</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link " href="#" data-toggle="" data-target="#"
+                   aria-expanded="true" aria-controls="">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Proveedores</span>
+                </a>
+            </li>
+
+
+            <li class="nav-item">
+                <a class="nav-link " href="#" data-toggle="" data-target="#"
+                   aria-expanded="true" aria-controls="">
+                    <i class="fa-solid fa-sim-card"></i>
+                    <span>Facturas</span>
+                </a>
+            </li>
+
+
+            <li class="nav-item">
+                <a class="nav-link " href="#" data-toggle="" data-target="#"
+                   aria-expanded="true" aria-controls="">
+                    <i class="fa-solid fa-suitcase"></i>
+                    <span>Artículos</span>
+                </a>
+            </li>
+
+
+            <li class="nav-item">
+                <a class="nav-link " href="#" data-toggle="" data-target="#"
+                   aria-expanded="true" aria-controls="">
+                    <i class="fa-solid fa-clipboard"></i>
+                    <span>Categorías</span>
+                </a>
+            </li>
+            <!--   <div id="collapseComponents" class="collapse" aria-labelledby="headingComponents" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="#">Buttons</a>
+                <a class="collapse-item" href="#">Cards</a>
+                 </div>
+            </div>-->
         </ul>
         <!-- End of Sidebar -->
 
@@ -62,7 +119,8 @@
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Douglas McGee</span>
+                                <i class="fa-solid fa-power-off"> </i>
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small"> Cerrar Sesión</span>
                             </a>
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -86,14 +144,12 @@
 
                 </nav>
                 <!-- End of Topbar -->
-
                 <!-- Page Content -->
                 <div class="container-fluid m-3">
                     @RenderBody()
                 </div>
             </div>
             <!-- End of Main Content -->
-
             <!-- Footer -->
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
@@ -104,10 +160,8 @@
             </footer>
         </div>
         <!-- End of Content Wrapper -->
-
     </div>
     <!-- End of Page Wrapper -->
-
     <!-- Scroll to Top -->
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
