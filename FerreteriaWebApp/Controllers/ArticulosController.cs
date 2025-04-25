@@ -102,7 +102,7 @@ namespace FerreteriaWebApp.Controllers
                     cmd.Parameters.AddWithValue("@IdProveedor", articulo.IdProveedor);
 
                     con.Open();
-                    var result = cmd.ExecuteScalar();
+                    cmd.ExecuteNonQuery();
                 }
                 return new HttpStatusCodeResult(200);
             }
