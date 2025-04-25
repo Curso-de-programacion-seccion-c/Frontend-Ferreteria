@@ -15,11 +15,11 @@ namespace FerreteriaWebApp.Controllers
 {
     public class ArticulosController : Controller
     {
-        // GET: Articulos
+        // GET: MOSTRAR LOS ARTICULOS EN UNA TABLA
         public ActionResult Index()
         {
             List<ArticulosModel> articulos = new List<ArticulosModel>(); //Esto crea una lista para guardar los articulos de la bd
-            string connectionString = "Data Source=DESKTOP-9CUINBH;Initial Catalog=FerreteriaDB;Integrated Security=True;";
+            string connectionString = "Data Source=DESKTOP-9CUINBH;Initial Catalog=FerreteriaDB;Integrated Security=True;"; //Cambiar el Data Source por la direccion de la maquina
 
             using (SqlConnection conn = new SqlConnection(connectionString))//Conexion a la base de datos
             {
@@ -29,9 +29,9 @@ namespace FerreteriaWebApp.Controllers
                 conn.Open();
                 SqlDataReader reader = cmd.ExecuteReader();
 
-                while (reader.Read())
+                while (reader.Read()) //El ciclo lee los datos que envio el sp fila por fila
                 {
-                    articulos.Add(new ArticulosModel
+                    articulos.Add(new ArticulosModel //Por cada fila del resultado, se crea un objeto y lo añade a la lista
                     {
                         IdArticulo = Convert.ToInt32(reader["IdArticulo"]),
                         CodeArticulo = Convert.ToInt32(reader["CodeArticulo"]),
@@ -48,27 +48,13 @@ namespace FerreteriaWebApp.Controllers
             return View("ArticulosView", articulos); //Muestra la vista, reemplazar ArticulosView por el nombre de la vista tal cual como se llama
         }
 
-
-        // GET: Articulos/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: Articulos/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Articulos/Create
+        // POST: EDITAR UN ARTICULO DE LA TABLA
         [HttpPost]
         public ActionResult EditarArticulo(ArticulosModel articulo)
         {
             try
             {
-                string connectionString = ConfigurationManager.ConnectionStrings["FerreteriaDB"].ConnectionString;
-
+                string connectionString = "Data Source=DESKTOP-9CUINBH;Initial Catalog=FerreteriaDB;Integrated Security=True;"; // TEMPORAL
                 using (SqlConnection con = new SqlConnection(connectionString))
                 {
                     SqlCommand cmd = new SqlCommand("ModificarArticulo", con);
@@ -96,48 +82,58 @@ namespace FerreteriaWebApp.Controllers
         }
 
 
-
-        // GET: Articulos/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: Articulos/Edit/5
+        //EDITAR
         [HttpPost]
-        public ActionResult Edit(int id, FormCollection collection)
+        public ActionResult AgregarArticulo(ArticulosModel articulo)
         {
             try
             {
-                // TODO: Add update logic here
+                string connectionString = "Data Source=DESKTOP-9CUINBH;Initial Catalog=FerreteriaDB;Integrated Security=True;";
+                using (SqlConnection con = new SqlConnection(connectionString))
+                {
+                    SqlCommand cmd = new SqlCommand("InsertarArticulo", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@CodeArticulo", articulo.CodeArticulo);
+                    cmd.Parameters.AddWithValue("@NombreArticulo", articulo.NombreArticulo);
+                    cmd.Parameters.AddWithValue("@Precio", articulo.Precio);
+                    cmd.Parameters.AddWithValue("@Stock", articulo.Stock);
+                    cmd.Parameters.AddWithValue("@Descripcion", articulo.Descripcion);
+                    cmd.Parameters.AddWithValue("@IdCategoria", articulo.IdCategoria);
+                    cmd.Parameters.AddWithValue("@IdProveedor", articulo.IdProveedor);
 
-                return RedirectToAction("Index");
+                    con.Open();
+                    var result = cmd.ExecuteScalar();
+                }
+                return new HttpStatusCodeResult(200);
             }
-            catch
+            catch (Exception ex)
             {
-                return View();
+                return new HttpStatusCodeResult(500, ex.Message);
             }
         }
 
-        // GET: Articulos/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
 
-        // POST: Articulos/Delete/5
+
+        // ELIMINAR UN ARTICULO DE LA TABLA
         [HttpPost]
-        public ActionResult Delete(int id, FormCollection collection)
+        public ActionResult EliminarArticulo(int idArticulo)
         {
             try
             {
-                // TODO: Add delete logic here
-
-                return RedirectToAction("Index");
+                string connectionString = "Data Source=DESKTOP-9CUINBH;Initial Catalog=FerreteriaDB;Integrated Security=True;";
+                using (SqlConnection con = new SqlConnection(connectionString))
+                {
+                    SqlCommand cmd = new SqlCommand("EliminarArticulo", con);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@IdArticulo", idArticulo);
+                    con.Open();
+                    cmd.ExecuteNonQuery();
+                }
+                return new HttpStatusCodeResult(200);
             }
-            catch
+            catch (Exception ex)
             {
-                return View();
+                return new HttpStatusCodeResult(500, ex.Message);
             }
         }
     }

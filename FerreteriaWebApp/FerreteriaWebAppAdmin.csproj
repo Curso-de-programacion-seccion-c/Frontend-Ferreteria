@@ -161,6 +161,7 @@
     <Content Include="Scripts\demo\chart-bar-demo.js" />
     <Content Include="Scripts\demo\chart-pie-demo.js" />
     <Content Include="Scripts\demo\datatables-demo.js" />
+    <Content Include="Scripts\FrmModificar.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />
     <Content Include="Scripts\jquery-3.4.1.min.js" />
     <Content Include="Scripts\jquery-3.4.1.slim.js" />

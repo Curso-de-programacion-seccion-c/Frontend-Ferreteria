@@ -1,14 +1,21 @@
-﻿<!--Se recibe la lista de articulos del ArticulosController-->
-@model List<FerreteriaWebApp.Models.ArticulosModel>
+﻿@model List<FerreteriaWebApp.Models.ArticulosModel>
 
 @{
-    ViewBag.Title = "Artículos"; // Título de la página
+    ViewBag.Title = "Artículos";
 }
 
 <h1>Articulos</h1>
 
+@Html.AntiForgeryToken()
+
+<!--BÓTÓN DE AGREGAR ARTICULOS-->
+<button id="btn-agregar-articulo" class="btn btn-outline-success mb-3">
+    <i class="fa fa-plus"></i> Agregar Artículo
+</button>
+
+<!--TABLA-->
 <table class="table table-striped table-bordered table-hover table-striped-columns">
-    <!--Encabezado de la tabla-->
+    <!--ENCABEZADO DE LA TABLA-->
     <thead class="bg-warning text-dark">
         <tr>
             <th>ID</th>
@@ -22,10 +29,8 @@
             <th>Acciones</th>
         </tr>
     </thead>
-
-    <!--Cuerpo de la tabla-->
+    <!--CUERPO DE LA TABLA-->
     <tbody>
-        <!--Foreach recorre cada articulo en la lista de ArticulosModel-->
         @foreach (var item in Model)
         {
             <tr>
@@ -37,6 +42,7 @@
                 <td>@item.Descripcion</td>
                 <td>@item.IdCategoria</td>
                 <td>@item.IdProveedor</td>
+                <!--BÓTÓN EDITAR-->
                 <td>
                     <button class="btn btn-sm btn-info edit-btn"
                             data-id="@item.IdArticulo"
@@ -49,7 +55,10 @@
                             data-idproveedor="@item.IdProveedor">
                         <i class="fa fa-pen"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger delete-btn" data-id="@item.IdArticulo">
+                    <!--BÓTÓN DE ELIMINAR-->
+                    <button class="btn btn-sm btn-danger delete-btn"
+                            data-id="@item.IdArticulo"
+                            data-nombre="@item.NombreArticulo">
                         <i class="fa fa-trash"></i>
                     </button>
                 </td>
@@ -57,3 +66,212 @@
         }
     </tbody>
 </table>
+
+<script>
+    // Primero carga el HTML y antes de ejecutar el script
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value; // Siempre colocarlo para que los métodos POST del controller funcionen
+
+        // BOTÓN AGREGAR ARTÍCULO
+        const agregarBtn = document.getElementById("btn-agregar-articulo");
+        agregarBtn.addEventListener("click", function () {
+            Swal.fire({
+                title: 'Agregar Nuevo Artículo',
+                html: `
+                    <input id="swal-code" class="swal2-input" placeholder="Código">
+                    <input id="swal-nombre" class="swal2-input" placeholder="Nombre">
+                    <input id="swal-precio" class="swal2-input" placeholder="Precio">
+                    <input id="swal-stock" class="swal2-input" placeholder="Stock">
+                    <input id="swal-descripcion" class="swal2-input" placeholder="Descripción">
+                    <input id="swal-idcategoria" class="swal2-input" placeholder="ID Categoría">
+                    <input id="swal-idproveedor" class="swal2-input" placeholder="ID Proveedor">
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Agregar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false,
+                preConfirm: () => {
+                    return {
+                        code: parseInt(document.getElementById('swal-code').value),
+                        nombre: document.getElementById('swal-nombre').value,
+                        precio: parseFloat(document.getElementById('swal-precio').value),
+                        stock: parseInt(document.getElementById('swal-stock').value),
+                        descripcion: document.getElementById('swal-descripcion').value,
+                        idCategoria: parseInt(document.getElementById('swal-idcategoria').value),
+                        idProveedor: parseInt(document.getElementById('swal-idproveedor').value)
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Articulos/AgregarArticulo', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(token && { 'RequestVerificationToken': token })
+                        },
+                        body: JSON.stringify({
+                            CodeArticulo: result.value.code,
+                            NombreArticulo: result.value.nombre,
+                            Precio: result.value.precio,
+                            Stock: result.value.stock,
+                            Descripcion: result.value.descripcion,
+                            IdCategoria: result.value.idCategoria,
+                            IdProveedor: result.value.idProveedor
+                        })
+                    }).then(async response => {
+                        if (response.ok) {
+                            // Si la respuesta es exitosa, agregamos la fila a la tabla
+                            Swal.fire('Agregado', 'El artículo se agregó exitosamente.', 'success');
+
+                            // Crear la nueva fila con los datos ingresados
+                            const tbody = document.querySelector("table tbody");
+                            const newRow = document.createElement("tr");
+
+                            newRow.innerHTML = `
+                                <td>Nuevo</td>
+                                <td>${result.value.code}</td>
+                                <td>${result.value.nombre}</td>
+                                <td>${result.value.precio.toFixed(2)}</td>
+                                <td>${result.value.stock}</td>
+                                <td>${result.value.descripcion}</td>
+                                <td>${result.value.idCategoria}</td>
+                                <td>${result.value.idProveedor}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info edit-btn"
+                                        data-id="0"
+                                        data-code="${result.value.code}"
+                                        data-nombre="${result.value.nombre}"
+                                        data-precio="${result.value.precio}"
+                                        data-stock="${result.value.stock}"
+                                        data-descripcion="${result.value.descripcion}"
+                                        data-idcategoria="${result.value.idCategoria}"
+                                        data-idproveedor="${result.value.idProveedor}">
+                                        <i class="fa fa-pen"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger delete-btn"
+                                        data-id="0"
+                                        data-nombre="${result.value.nombre}">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+
+                            tbody.appendChild(newRow);
+                        } else {
+                            const errorText = await response.text();
+                            Swal.fire('Error', `No se pudo agregar: ${errorText}`, 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // EDITAR
+       function AgregarArticulo() {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡No podrás revertir esto!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, agregarlo'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+            const nuevoArticulo = {
+                CodeArticulo: parseInt(document.getElementById('txtCodigoArticulo').value),
+                NombreArticulo: document.getElementById('txtNombreArticulo').value,
+                Descripcion: document.getElementById('txtDescripcion').value,
+                Marca: document.getElementById('txtMarca').value,
+                Precio: parseFloat(document.getElementById('txtPrecio').value),
+                Cantidad: parseInt(document.getElementById('txtCantidad').value),
+                Imagen: document.getElementById('txtImagen').value,
+                Estado: document.getElementById('txtEstado').value
+            };
+
+            // Validación básica antes de enviar
+            if (!nuevoArticulo.NombreArticulo || isNaN(nuevoArticulo.Precio)) {
+                Swal.fire('Error', 'Por favor completa todos los campos obligatorios', 'error');
+                return;
+            }
+
+            fetch('/Articulos/AgregarArticulo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify(nuevoArticulo)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al agregar el artículo');
+                }
+                return response.json(); 
+            })
+            .then(data => {
+                Swal.fire('¡Agregado!', 'El artículo ha sido agregado correctamente.', 'success');
+                limpiarFormulario();
+                cargarArticulos(); // vuelve a cargar la lista
+            })
+            .catch(error => {
+                console.error('Error al agregar el artículo:', error);
+                Swal.fire('Error', 'Hubo un problema al agregar el artículo.', 'error');
+            });
+        }
+    });
+}
+
+
+        // ELIMINAR
+        const deleteButtons = document.querySelectorAll(".delete-btn");
+        deleteButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                const id = this.dataset.id;
+                const nombre = this.dataset.nombre;
+
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: `¿Deseas eliminar el artículo "${nombre}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/Articulos/EliminarArticulo', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(token && { 'RequestVerificationToken': token })
+                            },
+                            body: JSON.stringify({ idArticulo: parseInt(id) })
+                        }).then(async response => {
+                            console.log(response); 
+                            if (response.ok) {
+                                Swal.fire('Eliminado', `El artículo "${nombre}" ha sido eliminado.`, 'success')
+                                    .then(() => {
+                                        const row = document.querySelector(`button[data-id="${id}"]`).closest('tr');
+                                        row.remove();
+                                    });
+                            } else {
+                                const errorText = await response.text();
+                                Swal.fire('Error', `No se pudo eliminar: ${errorText}`, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+    });
+</script>
