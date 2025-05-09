@@ -1,0 +1,29 @@
+﻿@model int?
+@{
+    ViewBag.Title = "Reporte de Factura";
+}
+
+<h2>Generar Reporte de Factura</h2>
+
+@using (Html.BeginForm("Index", "Reports", FormMethod.Post))
+{
+    <div class="form-group">
+        @Html.Label("IdFactura", "ID de Factura:")
+        @Html.TextBox("IdFactura", null, new { @class = "form-control" })
+    </div>
+    <button type="submit" class="btn btn-primary">Generar Vista Previa</button>
+}
+
+@if (Model.HasValue)
+{
+    <hr />
+    <h3>Vista previa del reporte</h3>
+
+    <div class="mb-3">
+        <a href="@Url.Action("GenerarReporte", "Reports", new { idFactura = Model.Value })"
+           class="btn btn-success" target="_blank">Descargar PDF</a>
+    </div>
+
+    <iframe src="@Url.Action("VisualizarReporte", "Reports", new { idFactura = Model.Value })"
+            width="100%" height="800px" style="border:none;"></iframe>
+}
