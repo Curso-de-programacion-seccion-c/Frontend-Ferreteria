@@ -14,6 +14,7 @@
     <i class="fa fa-plus"></i> Agregar Rol
 </button>
 
+@*boton buscar*@
 <div class="input-group mb-3">
     <input type="number" id="buscar-id" class="form-control" placeholder="Buscar por ID de Rol" />
     <button id="btn-buscar" class="btn btn-outline-primary">
@@ -162,11 +163,9 @@
                             }).then(async response => {
                                 if (response.ok) {
                                     Swal.fire('Actualizado', 'El artículo ha sido modificado.', 'success').then(() => {
-                                        debugger;
                                         const row = $(`button[data-id="${result.value.id}"]`).closest('tr');
                                         row.children().eq(1).text(result.value.nombre);
                                         row.children().eq(2).text(result.value.sueldo.toFixed(2));
-                                        debugger;
 
                                         const editBtn = row.find('.edit-btn').data({
                                             nombre: result.value.nombre,
@@ -211,17 +210,21 @@
                             },
                             body: JSON.stringify({ IdRol: parseInt(id) })
                         }).then(async response => {
-                            console.log(response);
-                            if (response.ok) {
+                            const data = await response.json();
+                            console.log(data);
+                            if (data.success) {
                                 Swal.fire('Eliminado', `El rol "${nombre}" ha sido eliminado.`, 'success')
                                     .then(() => {
                                         const row = document.querySelector(`button[data-id="${id}"]`).closest('tr');
                                         row.remove();
                                     });
                             } else {
-                                const errorText = await response.text();
-                                Swal.fire('Error', `No se pudo eliminar: ${errorText}`, 'error');
+                                Swal.fire('Error', `No se pudo eliminar: ${data.message}`, 'error');
                             }
+                        }).catch(error => {
+                            console.log(error);
+                            Swal.fire('Error', 'Ocurrió un error al eliminar el rol.', 'error');
+
                         });
                     }
                 });

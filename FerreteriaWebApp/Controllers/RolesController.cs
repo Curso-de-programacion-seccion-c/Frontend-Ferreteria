@@ -87,7 +87,20 @@ namespace FerreteriaWebApp.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                return new HttpStatusCodeResult(200);
+                var contentReponse = await response.Content.ReadAsStringAsync();
+                var roleResponse = JsonConvert.DeserializeObject<ResponseRol>(contentReponse);
+
+                if (roleResponse.respuesta == 0)
+                {
+                    if(roleResponse.descripcion_respuesta.Contains("FK"))
+                    {
+                        return Json(new { success = false, message = "No se puede eliminar el rol porque está asociado a un empleado." }, JsonRequestBehavior.AllowGet);
+                    }
+
+                    return Json(new { success = false, message = "Error al eliminar el rol." }, JsonRequestBehavior.AllowGet);
+                }
+
+                return Json(new { success = true, message = "Rol eliminado correctamente." }, JsonRequestBehavior.AllowGet);
             }
             else
             {
