@@ -95,9 +95,39 @@ namespace FerreteriaWebApp.Controllers
             }
         }
 
-        public class EliminarRolRequest
+        public async Task<ActionResult> BuscarPorId(int? id)
         {
-            public int idRol { get; set; }
+            _httpClient.BaseAddress = new Uri("https://localhost:44333/");
+
+            // Si no hay ID, obtenemos todos los roles
+            if (id == null || id == 0)
+            {
+                var responseAll = await _httpClient.GetAsync("rest/api/obtenerRoles");
+                if (responseAll.IsSuccessStatusCode)
+                {
+                    var contenido = await responseAll.Content.ReadAsStringAsync();
+                    var lista = JsonConvert.DeserializeObject<List<RolesModel>>(contenido);
+                    return Json(lista, JsonRequestBehavior.AllowGet);
+                }
+                else
+                {
+                    return new HttpStatusCodeResult(500, "Error al obtener los roles.");
+                }
+            }
+
+            // Si hay ID, buscamos uno específico
+            var response = await _httpClient.GetAsync($"rest/api/obtenerRol/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                var contenido = await response.Content.ReadAsStringAsync();
+                var rol = JsonConvert.DeserializeObject<RolesModel>(contenido);
+                return Json(rol, JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                return new HttpStatusCodeResult(500, "Error al buscar el rol.");
+            }
         }
-    }    
+
+    }
 }

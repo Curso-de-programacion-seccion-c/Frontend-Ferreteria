@@ -14,6 +14,14 @@
     <i class="fa fa-plus"></i> Agregar Rol
 </button>
 
+<div class="input-group mb-3">
+    <input type="number" id="buscar-id" class="form-control" placeholder="Buscar por ID de Rol" />
+    <button id="btn-buscar" class="btn btn-outline-primary">
+        <i class="fa fa-search"></i> Buscar
+    </button>
+</div>
+
+
 <!--TABLA-->
 <table class="table table-striped table-bordered table-hover table-striped-columns">
     <!--ENCABEZADO DE LA TABLA-->
@@ -219,6 +227,44 @@
                 });
             });
         });
+
+        // BUSCAR
+        document.getElementById("btn-buscar").addEventListener("click", async function () {
+            const id = document.getElementById("buscar-id").value.trim();
+            const url = `/Roles/BuscarPorId?id=${id}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const tbody = document.querySelector("table tbody");
+            tbody.innerHTML = ""; // Limpiar la tabla
+
+            const roles = Array.isArray(data) ? data : [data];
+            roles.forEach(rol => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+            <td>${rol.IdRol}</td>
+            <td>${rol.Nombre}</td>
+            <td>${rol.Sueldo}</td>
+            <td>
+                <button class="btn btn-sm btn-info edit-btn"
+                        data-id="${rol.IdRol}"
+                        data-nombre="${rol.Nombre}"
+                        data-sueldo="${rol.Sueldo}">
+                    <i class="fa fa-pen"></i>
+                </button>
+                <button class="btn btn-sm btn-danger delete-btn"
+                        data-id="${rol.IdRol}"
+                        data-nombre="${rol.Nombre}"
+                        data-sueldo="${rol.Sueldo}">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </td>
+        `;
+                tbody.appendChild(row);
+            });
+        });
+
 
     });
 </script>
