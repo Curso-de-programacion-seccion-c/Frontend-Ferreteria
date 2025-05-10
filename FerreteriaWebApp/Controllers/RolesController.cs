@@ -80,11 +80,10 @@ namespace FerreteriaWebApp.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> EliminarRol(EliminarRolRequest req)
+        public async Task<ActionResult> EliminarRol(int IdRol)
         {
-            var id = req.idRol;
             _httpClient.BaseAddress = new Uri("https://localhost:44333/");
-            var response = await _httpClient.DeleteAsync($"rest/api/eliminarRol/{id}");
+            var response = await _httpClient.DeleteAsync($"rest/api/eliminarRol/{IdRol}");
 
             if (response.IsSuccessStatusCode)
             {

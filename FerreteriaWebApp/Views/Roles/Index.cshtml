@@ -65,8 +65,8 @@
             Swal.fire({
                 title: 'Agregar Nuevo Rol',
                 html: `
-                    <input id="swal-nombre" class="swal2-input" placeholder="Nombre">
-                    <input id="swal-sueldo" class="swal2-input" placeholder="Sueldo">
+                    <input id="swal-nombre" class="swal2-input" placeholder="Nombre" />
+                    <input id="swal-sueldo" class="swal2-input" placeholder="Sueldo" />
                 `,
                 showCancelButton: true,
                 confirmButtonText: 'Agregar',
@@ -201,7 +201,7 @@
                                 'Content-Type': 'application/json',
                                 ...(token && { 'RequestVerificationToken': token })
                             },
-                            body: JSON.stringify({ idArticulo: parseInt(id) })
+                            body: JSON.stringify({ IdRol: parseInt(id) })
                         }).then(async response => {
                             console.log(response);
                             if (response.ok) {
@@ -219,4 +219,6 @@
                 });
             });
         });
+
+    });
 </script>
