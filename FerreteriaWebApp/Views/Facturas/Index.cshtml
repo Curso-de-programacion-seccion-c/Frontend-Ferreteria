@@ -1,0 +1,328 @@
+﻿@model List<FerreteriaWebApp.Models.ListarFacturas>
+@{
+    ViewBag.Title = "Facturas";
+}
+<h1>Facturas</h1>
+@Html.AntiForgeryToken()
+
+<!-- Botón Agregar Factura -->
+<button id="btn-agregar-factura" class="btn btn-outline-success mb-3">
+    <i class="fa fa-plus"></i> Agregar Factura
+</button>
+
+<!-- Buscar -->
+<div class="input-group mb-3">
+    <input type="number" id="buscar-id" class="form-control" placeholder="Buscar por ID Factura" />
+    <button id="btn-buscar" class="btn btn-outline-primary">
+        <i class="fa fa-search"></i> Buscar
+    </button>
+</div>
+
+<!-- Tabla de Facturas -->
+<table class="table table-striped table-bordered table-hover table-striped-columns">
+    <thead class="bg-warning text-dark">
+        <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Empleado</th>
+            <th>Cliente</th>
+            <th>Forma de Pago</th>
+            <th>Total</th>
+            <th>Acciones</th>
+            <th>Detalle</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.idFactura</td>
+                <td>@item.fecha.ToShortDateString()</td>
+                <td>@item.nombreEmpleado</td>
+                <td>@item.nombreCliente</td>
+                <td>@item.nombreFormaPago</td>
+                <td>@item.Total_Pago.ToString("C", new System.Globalization.CultureInfo("es-GT"))</td>
+                <td>
+                    <button class="btn btn-sm btn-info edit-btn"
+                            data-id="@item.idFactura"
+                            data-fecha="@item.fecha.ToString("yyyy-MM-dd")"
+                            data-idempleado="@item.idEmpleado"
+                            data-idcliente="@item.idCliente"
+                            data-idformapago="@item.idFormaPago"
+                            data-total="@item.Total_Pago">
+                        <i class="fa fa-pen"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-btn" data-id="@item.idFactura">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+                <td>
+                    <a href="@Url.Action("Detalle", "Factura", new { id = item.idFactura })" class="btn btn-sm btn-secondary">
+                        <i class="fa fa-eye"></i> Ver Detalle
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    async function obtenerOpciones(url, valueField, textField) {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        return data.map(item => `<option value="${item[valueField]}">${item[textField]}</option>`).join('');
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        let esEdicion = false; // Estado para distinguir la acción actual
+
+        // AGREGAR FACTURA
+        document.getElementById("btn-agregar-factura").addEventListener("click", async function () {
+            // Obtener datos de Empleados, Clientes y Forma de Pago
+            esEdicion = false; // Cambiar a modo creación
+            document.getElementById("modal-factura-title").textContent = "Crear Nueva Factura";
+            document.getElementById("form-crear-factura").reset();
+            document.getElementById("input-id-factura").value = "";
+
+            await cargarSelect('/Facturas/ListarEmpleado', 'select-empleado', 'idEmpleado', 'Nombre');
+            await cargarSelect('/Facturas/ListarCliente', 'select-cliente', 'IdCliente', 'Nombre');
+            await cargarSelect('/Facturas/ListarFormaPago', 'select-formapago', 'idFormaPago', 'NombreFormaPago');
+
+            $('#crearFacturaModal').modal('show');
+        });
+
+        async function cargarSelect(url, selectId, valueField, textField) {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const select = document.getElementById(selectId);
+            select.innerHTML = ''; // Limpiar opciones anteriores
+
+            data.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item[valueField];
+                option.textContent = item[textField];
+                select.appendChild(option);
+            });
+        }
+
+        document.getElementById("form-crear-factura").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const jsonData = Object.fromEntries(formData.entries());
+            jsonData.idEmpleado = parseInt(jsonData.idEmpleado);
+            jsonData.idCliente = parseInt(jsonData.idCliente);
+            jsonData.idFormaPago = parseInt(jsonData.idFormaPago);
+            jsonData.total_Pago = parseFloat(jsonData.total_Pago);
+            debugger;
+
+            const url = esEdicion ? '/Facturas/EditarFactura' : '/Facturas/AgregarFactura';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'RequestVerificationToken': token })
+                },
+                body: JSON.stringify(jsonData)
+            }).then(async response => {
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire(esEdicion ? 'Actualizado' : 'Guardado',
+                        esEdicion ? 'Factura actualizada correctamente.' : 'Factura creada correctamente.',
+                        'success')
+                        .then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message || 'Error al procesar la solicitud.', 'error');
+                }
+            }).catch(error => {
+                console.error(error);
+                Swal.fire('Error', 'Error al procesar la solicitud.', 'error');
+            });
+        });
+
+
+
+        // EDITAR FACTURA
+        $(".edit-btn").click(async function () {
+            esEdicion = true;
+            const id = $(this).data("id");
+            const fecha = $(this).data("fecha");
+            const idEmpleado = $(this).data("idempleado");
+            const idCliente = $(this).data("idcliente");
+            const idFormaPago = $(this).data("idformapago");
+            const total = $(this).data("total");
+
+            document.getElementById("modal-factura-title").textContent = "Editar Factura";
+            document.getElementById("input-id-factura").value = id;
+            document.getElementById("input-fecha").value = fecha;
+            document.getElementById("input-total").value = total;
+
+            await cargarSelect('/Facturas/ListarEmpleado', 'select-empleado', 'idEmpleado', 'Nombre');
+            await cargarSelect('/Facturas/ListarCliente', 'select-cliente', 'IdCliente', 'Nombre');
+            await cargarSelect('/Facturas/ListarFormaPago', 'select-formapago', 'idFormaPago', 'NombreFormaPago');
+
+            document.getElementById("select-empleado").value = idEmpleado;
+            document.getElementById("select-cliente").value = idCliente;
+            document.getElementById("select-formapago").value = idFormaPago;
+
+            $('#crearFacturaModal').modal('show');
+        });
+
+        // ELIMINAR FACTURA
+        document.querySelectorAll(".delete-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                const id = this.dataset.id;
+                document.getElementById("factura-id-eliminar").textContent = id;
+                document.getElementById("input-id-eliminar").value = id;
+                $('#eliminarFacturaModal').modal('show');
+            });
+        });
+
+        document.getElementById("form-eliminar-factura").addEventListener("submit", function (e) {
+            debugger;
+
+            e.preventDefault();
+            const id = parseInt(document.getElementById("input-id-eliminar").value);
+
+            fetch('/Facturas/EliminarFactura', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({ idFactura: id })
+            }).then(async response => {
+                const data = await response.json();
+                if (data.success) {
+                    $('#eliminarFacturaModal').modal('hide');
+                    Swal.fire('Eliminado', `Factura #${id} eliminada correctamente.`, 'success')
+                        .then(() => location.reload());
+                } else {
+                    Swal.fire('Error', `No se pudo eliminar: ${data.message}`, 'error');
+                }
+            }).catch(error => {
+                console.error(error);
+                Swal.fire('Error', 'Ocurrió un error al eliminar la factura.', 'error');
+            });
+        });
+
+
+        // BUSCAR FACTURA
+        document.getElementById("btn-buscar").addEventListener("click", async function () {
+            const id = document.getElementById("buscar-id").value.trim();
+            const url = `/Factura/BuscarPorId?id=${id}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const tbody = document.querySelector("table tbody");
+            tbody.innerHTML = ""; // Limpiar la tabla
+
+            const facturas = Array.isArray(data) ? data : [data];
+            facturas.forEach(f => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${f.idFactura}</td>
+                    <td>${new Date(f.fecha).toLocaleDateString()}</td>
+                    <td>${f.nombreEmpleado}</td>
+                    <td>${f.nombreCliente}</td>
+                    <td>${f.nombreFormaPago}</td>
+                    <td>${f.total_Pago.toLocaleString('es-HN', { style: 'currency', currency: 'HNL' })}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info edit-btn"
+                                data-id="${f.idFactura}"
+                                data-fecha="${f.fecha.split('T')[0]}"
+                                data-idempleado="${f.idEmpleado}"
+                                data-idcliente="${f.idCliente}"
+                                data-idformapago="${f.idFormaPago}"
+                                data-total="${f.total_Pago}">
+                            <i class="fa fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-btn"
+                                data-id="${f.idFactura}"
+                                data-total="${f.total_Pago}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                    <td>
+                        <a href="/Factura/Detalle?id=${f.idFactura}" class="btn btn-sm btn-secondary">
+                            <i class="fa fa-eye"></i> Ver Detalle
+                        </a>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+        });
+
+    });
+</script>
+
+<!-- Modal: Crear / Editar Factura -->
+<div class="modal fade" id="crearFacturaModal" tabindex="-1" role="dialog" aria-labelledby="crearFacturaModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="form-crear-factura">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-factura-title">Crear Nueva Factura</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="idFactura" id="input-id-factura" />
+
+                    <label>Fecha:</label>
+                    <input type="date" class="form-control" name="fecha" id="input-fecha" required />
+
+                    <label>Empleado:</label>
+                    <select class="form-control" name="idEmpleado" id="select-empleado" required></select>
+
+                    <label>Cliente:</label>
+                    <select class="form-control" name="idCliente" id="select-cliente" required></select>
+
+                    <label>Forma de Pago:</label>
+                    <select class="form-control" name="idFormaPago" id="select-formapago" required></select>
+
+                    <label>Total a Pagar:</label>
+                    <input type="number" class="form-control" name="total_Pago" id="input-total" step="0.01" min="0" disabled />
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success" id="btn-guardar-factura">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirmar Eliminación -->
+<div class="modal fade" id="eliminarFacturaModal" tabindex="-1" role="dialog" aria-labelledby="eliminarFacturaModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form id="form-eliminar-factura">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="eliminarFacturaModalLabel">Eliminar Factura</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="texto-confirmacion-eliminar">
+                        ¿Está seguro que desea eliminar la factura con ID <strong>#<span id="factura-id-eliminar"></span></strong>?
+                    </p>
+                    <input type="hidden" id="input-id-eliminar" name="idFactura" />
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
