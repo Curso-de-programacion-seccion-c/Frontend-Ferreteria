@@ -235,7 +235,6 @@
     <Content Include="Views\ArticulosView.cshtml" />
     <Content Include="Views\Articulos\ArticulosView.cshtml" />
     <Content Include="Views\Reports\FacturaId.cshtml" />
-    <Content Include="Views\Reports\FacturaViewer.cshtml" />
     <Content Include="Views\Roles\Index.cshtml" />
     <Content Include="Views\Facturas\Index.cshtml" />
     <Content Include="Views\Facturas\Detalle.cshtml" />
