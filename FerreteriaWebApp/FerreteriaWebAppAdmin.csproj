@@ -151,6 +151,7 @@
     </Compile>
     <Compile Include="Models\ApiResponseModel.cs" />
     <Compile Include="Models\ArticulosModel.cs" />
+    <Compile Include="Models\FacturaDetalle.cs" />
     <Compile Include="Models\FacturaModel.cs" />
     <Compile Include="Models\Reports.cs" />
     <Compile Include="Models\RolesModel.cs" />
@@ -237,6 +238,7 @@
     <Content Include="Views\Reports\FacturaViewer.cshtml" />
     <Content Include="Views\Roles\Index.cshtml" />
     <Content Include="Views\Facturas\Index.cshtml" />
+    <Content Include="Views\Facturas\Detalle.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Reportes\FacturaId.rdlc" />

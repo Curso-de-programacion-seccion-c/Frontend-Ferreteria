@@ -1,0 +1,301 @@
+﻿@model List<FerreteriaWebApp.Models.ListarDetalleVenta>
+@{
+    ViewBag.Title = "Detalle de Factura";
+    var idFactura = ViewBag.IdFactura;
+}
+
+<h2>Detalle de Factura #@idFactura</h2>
+<input type="hidden" id="input-id-factura" value="@idFactura" />
+
+<a href="@Url.Action("Index", "Facturas")" class="btn btn-secondary mb-3">
+    <i class="fa fa-arrow-left"></i> Volver a Facturas
+</a>
+
+<!-- Botón Agregar -->
+<button id="btn-agregar-detalle" class="btn btn-outline-success mb-3">
+    <i class="fa fa-plus"></i> Agregar Detalle
+</button>
+
+<!-- Buscar -->
+<div class="input-group mb-3">
+    <input type="number" id="buscar-id" class="form-control" placeholder="Buscar por ID Detalle" />
+    <button id="btn-buscar" class="btn btn-outline-primary">
+        <i class="fa fa-search"></i> Buscar
+    </button>
+</div>
+
+<table class="table table-striped table-bordered">
+    <thead class="bg-warning text-dark">
+        <tr>
+            <th>ID Detalle</th>
+            <th>Artículo</th>
+            <th>Cantidad</th>
+            <th>Precio Unitario</th>
+            <th>Total</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.IdDetalleVenta</td>
+                <td>@item.NombreArticulo</td>
+                <td>@item.Cantidad</td>
+                <td>@item.PrecioUnitario.ToString("C", new System.Globalization.CultureInfo("es-GT"))</td>
+                <td>Q@(item.Cantidad * item.PrecioUnitario)</td>
+                <td>
+                    <button class="btn btn-sm btn-info edit-btn"
+                            data-id="@item.IdDetalleVenta"
+                            data-idarticulo="@item.IdArticulo"
+                            data-cantidad="@item.Cantidad">
+                        <i class="fa fa-pen"></i>
+                    </button>
+                    <button class="btn btn-outline-danger btn-eliminar"
+                            data-id="@item.IdDetalleVenta">
+                        <i class="fa fa-trash"></i> Eliminar
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr class="table-info">
+            <td colspan="4" class="text-end"><strong>Total General:</strong></td>
+            <td>
+                <strong>
+                    @Model.Sum(x => x.Cantidad * x.PrecioUnitario).ToString("C", new System.Globalization.CultureInfo("es-GT"))
+                </strong>
+            </td>
+        </tr>
+    </tfoot>
+</table>
+
+<!-- Modal Crear / Editar Detalle -->
+<div class="modal fade" id="crearDetalleFacturaModal" tabindex="-1" role="dialog" aria-labelledby="crearDetalleFacturaModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="form-crear-detalle-factura">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-detalle-factura-title">Agregar Detalle</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="IdDetalleVenta" id="input-id-detalle" />
+                    <input type="hidden" name="IdFactura" id="input-id-factura" value="@idFactura" />
+
+                    <label>Artículo:</label>
+                    <select class="form-control" name="IdArticulo" id="select-articulo" required></select>
+
+                    <label>Cantidad:</label>
+                    <input type="number" class="form-control" name="Cantidad" id="input-cantidad" min="1" required />
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Eliminación -->
+<div class="modal fade" id="eliminarDetalleModal" tabindex="-1" role="dialog" aria-labelledby="eliminarDetalleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form id="form-eliminar-detalle">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="eliminarDetalleModalLabel">Eliminar Detalle</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea eliminar el detalle con ID <strong>#<span id="detalle-id-eliminar"></span></strong>?</p>
+                    <input type="hidden" id="input-id-eliminar" name="IdDetalleVenta" />
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        let esEdicion = false;
+
+        document.querySelectorAll('#crearDetalleFacturaModal .btn-secondary').forEach(btn => {
+            btn.addEventListener('click', function () {
+                $('#crearDetalleFacturaModal').modal('hide');
+            });
+        });
+
+        async function cargarSelect(url, selectId, valueField, textField) {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const select = document.getElementById(selectId);
+            select.innerHTML = ''; // Limpiar opciones anteriores
+
+            data.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item[valueField];
+                option.textContent = item[textField];
+                select.appendChild(option);
+            });
+        }
+
+        const idFactura = @idFactura;
+
+        document.getElementById("btn-agregar-detalle").addEventListener("click", async function () {
+            esEdicion = false;
+            const idDetalleEdicion = null;
+
+            document.getElementById("modal-detalle-factura-title").textContent = "Agregar Detalle";
+            document.getElementById("form-crear-detalle-factura").reset();
+            document.getElementById("input-id-detalle").value = "";
+            document.getElementById("input-id-factura").value = idFactura;
+
+            await cargarSelect('/Facturas/ListarArticulos', 'select-articulo', 'IdArticulo', 'NombreArticulo');
+            $('#crearDetalleFacturaModal').modal('show');
+        });
+
+        document.querySelectorAll(".edit-btn").forEach(btn => {
+            btn.addEventListener("click", async function () {
+                const idDetalle = this.dataset.id;
+                const idArticulo = this.dataset.idarticulo;
+                const cantidad = this.dataset.cantidad;
+
+                document.getElementById("modal-detalle-factura-title").textContent = "Editar Detalle";
+                document.getElementById("input-id-detalle").value = idDetalle;
+                document.getElementById("input-cantidad").value = cantidad;
+                await cargarSelect('/Facturas/ListarArticulos', 'select-articulo', 'IdArticulo', 'NombreArticulo');
+
+                document.getElementById("select-articulo").value = idArticulo;
+                $('#crearDetalleFacturaModal').modal('show');
+            });
+        });
+
+        document.querySelectorAll(".btn-eliminar").forEach(btn => {
+            btn.addEventListener("click", function () {
+                const idDetalle = this.dataset.id;
+                document.getElementById("detalle-id-eliminar").textContent = idDetalle;
+                document.getElementById("input-id-eliminar").value = idDetalle;
+                $('#eliminarDetalleModal').modal('show');
+            });
+        });
+
+        document.getElementById("form-crear-detalle-factura").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const jsonData = Object.fromEntries(formData.entries());
+            jsonData.IdFactura = parseInt(jsonData.IdFactura);
+            jsonData.IdArticulo = parseInt(jsonData.IdArticulo);
+            jsonData.Cantidad = parseInt(jsonData.Cantidad);
+
+            const url = esEdicion
+                ? `/Facturas/EditarDetalleFactura/${idDetalleEdicion}`
+                : '/Facturas/AgregarDetalleFactura';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'RequestVerificationToken': token })
+                },
+                body: JSON.stringify(jsonData)
+            }).then(async response => {
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire(esEdicion ? 'Actualizado' : 'Guardado',
+                        esEdicion ? 'Detalle actualizado correctamente.' : 'Detalle agregado correctamente.',
+                        'success')
+                        .then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message || 'Error al procesar la solicitud.', 'error');
+                }
+            }).catch(error => {
+                console.error(error);
+                Swal.fire('Error', 'Error al procesar la solicitud.', 'error');
+            });
+        });
+
+        document.getElementById("form-eliminar-detalle").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const idDetalle = document.getElementById("input-id-eliminar").value;
+
+            fetch('/Facturas/EliminarDetalleFactura', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'RequestVerificationToken': token })
+                },
+                body: JSON.stringify({ idDetalle: parseInt(idDetalle) })
+            }).then(async response => {
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire('Eliminado', 'Detalle eliminado correctamente.', 'success')
+                        .then(() => location.reload());
+                } else {
+                    $('#eliminarDetalleModal').modal('hide');
+                    Swal.fire('Error', data.message || 'Error al procesar la solicitud.', 'error');
+                }
+            }).catch(error => {
+                console.error(error);
+                $('#eliminarDetalleModal').modal('hide');
+                Swal.fire('Error', 'Error al procesar la solicitud.', 'error');
+            });
+        });
+
+        document.getElementById("btn-buscar").addEventListener("click", async function () {
+            const id = document.getElementById("buscar-id").value.trim();
+            const idFactura = @idFactura;
+
+            const formData = new FormData();
+            formData.append("id", id || ""); // Si está vacío, enviamos null
+            formData.append("idFactura", idFactura);
+
+            const response = await fetch("/Facturas/BuscarDetallePorId", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            const tbody = document.querySelector("table tbody");
+            tbody.innerHTML = "";
+
+            const facturas = Array.isArray(data) ? data : [data];
+            facturas.forEach(f => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${f.IdDetalleVenta}</td>
+                    <td>${f.NombreArticulo}</td>
+                    <td>${f.Cantidad}</td>
+                    <td>${f.PrecioUnitario.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' })}</td>
+                    <td>${(f.Cantidad * f.PrecioUnitario).toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' })}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info edit-btn"
+                                data-id="${f.IdDetalleVenta}"
+                                data-idarticulo="${f.IdArticulo}"
+                                data-cantidad="${f.Cantidad}">
+                            <i class="fa fa-pen"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-eliminar"
+                                data-id="${f.IdDetalleVenta}">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        });
+
+    });
+</script>

@@ -10,14 +10,6 @@
     <i class="fa fa-plus"></i> Agregar Factura
 </button>
 
-<!-- Buscar -->
-<div class="input-group mb-3">
-    <input type="number" id="buscar-id" class="form-control" placeholder="Buscar por ID Factura" />
-    <button id="btn-buscar" class="btn btn-outline-primary">
-        <i class="fa fa-search"></i> Buscar
-    </button>
-</div>
-
 <!-- Tabla de Facturas -->
 <table class="table table-striped table-bordered table-hover table-striped-columns">
     <thead class="bg-warning text-dark">
@@ -57,7 +49,7 @@
                     </button>
                 </td>
                 <td>
-                    <a href="@Url.Action("Detalle", "Factura", new { id = item.idFactura })" class="btn btn-sm btn-secondary">
+                    <a href="@Url.Action("Detalle", "Facturas", new { id = item.idFactura })" class="btn btn-sm btn-secondary">
                         <i class="fa fa-eye"></i> Ver Detalle
                     </a>
                 </td>
@@ -78,6 +70,18 @@
         const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
         let esEdicion = false; // Estado para distinguir la acción actual
+
+        document.querySelectorAll('#form-crear-factura .btn-secondary').forEach(btn => {
+            btn.addEventListener('click', function () {
+                $('#form-crear-factura').modal('hide');
+            });
+        });
+
+        document.querySelectorAll('#form-eliminar-factura .btn-secondary').forEach(btn => {
+            btn.addEventListener('click', function () {
+                $('#form-eliminar-factura').modal('hide');
+            });
+        });
 
         // AGREGAR FACTURA
         document.getElementById("btn-agregar-factura").addEventListener("click", async function () {
@@ -118,7 +122,6 @@
             jsonData.idCliente = parseInt(jsonData.idCliente);
             jsonData.idFormaPago = parseInt(jsonData.idFormaPago);
             jsonData.total_Pago = parseFloat(jsonData.total_Pago);
-            debugger;
 
             const url = esEdicion ? '/Facturas/EditarFactura' : '/Facturas/AgregarFactura';
 
@@ -184,7 +187,6 @@
         });
 
         document.getElementById("form-eliminar-factura").addEventListener("submit", function (e) {
-            debugger;
 
             e.preventDefault();
             const id = parseInt(document.getElementById("input-id-eliminar").value);
@@ -203,10 +205,12 @@
                     Swal.fire('Eliminado', `Factura #${id} eliminada correctamente.`, 'success')
                         .then(() => location.reload());
                 } else {
+                    $('#eliminarFacturaModal').modal('hide');
                     Swal.fire('Error', `No se pudo eliminar: ${data.message}`, 'error');
                 }
             }).catch(error => {
                 console.error(error);
+                $('#eliminarFacturaModal').modal('hide');
                 Swal.fire('Error', 'Ocurrió un error al eliminar la factura.', 'error');
             });
         });
@@ -215,7 +219,7 @@
         // BUSCAR FACTURA
         document.getElementById("btn-buscar").addEventListener("click", async function () {
             const id = document.getElementById("buscar-id").value.trim();
-            const url = `/Factura/BuscarPorId?id=${id}`;
+            const url = `/Facturas/BuscarFacturaPorId?idFactura=${id}`;
 
             const response = await fetch(url);
             const data = await response.json();
@@ -227,34 +231,33 @@
             facturas.forEach(f => {
                 const row = document.createElement("tr");
                 row.innerHTML = `
-                    <td>${f.idFactura}</td>
-                    <td>${new Date(f.fecha).toLocaleDateString()}</td>
-                    <td>${f.nombreEmpleado}</td>
-                    <td>${f.nombreCliente}</td>
-                    <td>${f.nombreFormaPago}</td>
-                    <td>${f.total_Pago.toLocaleString('es-HN', { style: 'currency', currency: 'HNL' })}</td>
-                    <td>
-                        <button class="btn btn-sm btn-info edit-btn"
-                                data-id="${f.idFactura}"
-                                data-fecha="${f.fecha.split('T')[0]}"
-                                data-idempleado="${f.idEmpleado}"
-                                data-idcliente="${f.idCliente}"
-                                data-idformapago="${f.idFormaPago}"
-                                data-total="${f.total_Pago}">
-                            <i class="fa fa-pen"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger delete-btn"
-                                data-id="${f.idFactura}"
-                                data-total="${f.total_Pago}">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
-                    <td>
-                        <a href="/Factura/Detalle?id=${f.idFactura}" class="btn btn-sm btn-secondary">
-                            <i class="fa fa-eye"></i> Ver Detalle
-                        </a>
-                    </td>
-                `;
+                <td>${f.idFactura}</td>
+                <td>${new Date(f.fecha).toLocaleDateString()}</td>
+                <td>${f.nombreEmpleado}</td>
+                <td>${f.nombreCliente}</td>
+                <td>${f.nombreFormaPago}</td>
+                <td>${f.Total_Pago.toLocaleString('es-GT', { style: 'currency', currency: 'GTQ' })}</td>
+                <td>
+                    <button class="btn btn-sm btn-info edit-btn"
+                            data-id="${f.idFactura}"
+                            data-fecha="${new Date(f.fecha).toISOString().split('T')[0]}"
+                            data-idempleado="${f.idEmpleado}"
+                            data-idcliente="${f.idCliente}"
+                            data-idformapago="${f.idFormaPago}"
+                            data-total="${f.total_Pago}">
+                        <i class="fa fa-pen"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-btn" data-id="${f.idFactura}">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+                <td>
+                    <a href="/Facturas/Detalle/${f.idFactura}" class="btn btn-sm btn-secondary">
+                        <i class="fa fa-eye"></i> Ver Detalle
+                    </a>
+                </td>
+            `;
+
                 tbody.appendChild(row);
             });
 
