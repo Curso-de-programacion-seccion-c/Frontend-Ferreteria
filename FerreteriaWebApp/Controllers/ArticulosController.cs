@@ -19,7 +19,7 @@ namespace FerreteriaWebApp.Controllers
         public ActionResult Index()
         {
             List<ArticulosModel> articulos = new List<ArticulosModel>(); //Esto crea una lista para guardar los articulos de la bd
-            string connectionString = "Data Source=DESKTOP-9CUINBH;Initial Catalog=FerreteriaDB;Integrated Security=True;"; //Cambiar el Data Source por la direccion de la maquina
+            string connectionString = "Data Source=localhost;Initial Catalog=FerreteriaDB;Integrated Security=True;"; //Cambiar el Data Source por la direccion de la maquina
 
             using (SqlConnection conn = new SqlConnection(connectionString))//Conexion a la base de datos
             {

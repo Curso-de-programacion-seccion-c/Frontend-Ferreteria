@@ -1,0 +1,423 @@
+﻿@model List<FerreteriaWebApp.Models.EmpleadoModel>
+@{
+    ViewBag.Title = "Lista de Empleados";
+}
+
+<h2>Lista de Empleados</h2>
+
+
+<!-- Botón Agregar -->
+<button id="btn-agregar-empleado" class="btn btn-outline-success mb-3">
+    <i class="fa fa-plus"></i> Agregar Empleado
+</button>
+
+<!-- Buscar -->
+<div class="input-group mb-3">
+    <input type="number" id="buscar-id" class="form-control" placeholder="Buscar por ID" />
+    <button id="btn-buscar" class="btn btn-outline-primary">
+        <i class="fa fa-search"></i> Buscar
+    </button>
+</div>
+
+<table class="table table-striped table-bordered">
+    <thead class="bg-warning text-dark">
+        <tr>
+            <th>ID Empleado</th>
+            <th>Dpi</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Puesto</th>
+            <th>Correo Electronico</th>
+            <th>Telefono</th>
+            <th>Fecha de Contratacion</th>
+            <th>Id Rol</th>
+            <th>Nombre Rol</th>
+            <th>Sueldo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.idEmpleado</td>
+                <td>@item.Dpi</td>
+                <td>@item.Nombre</td>
+                <td>@item.Apellido</td>
+                <td>@item.Puesto</td>
+                <td>@item.CorreoElectronico</td>
+                <td>@item.Telefono</td>
+                <td>@item.FechaContratacion</td>
+                <td>@item.IdRol</td>
+                <td>@item.nombreRol</td>
+                <td>@item.Sueldo</td>
+                <td>
+                    <button class="btn btn-sm btn-info edit-btn"
+                            data-id="@item.idEmpleado"
+                            data-dpi="@item.Dpi"
+                            data-nombre="@item.Nombre"
+                            data-apellido="@item.Apellido"
+                            data-puesto="@item.Puesto"
+                            data-correo-electronico="@item.CorreoElectronico"
+                            data-telefono="@item.Telefono"
+                            data-fecha-contratacion="@item.FechaContratacion"
+                            data-id-rol="@item.IdRol"
+                            data-nombre-rol="@item.nombreRol"
+                            data-sueldo="@item.Sueldo">
+                        <i class="fa fa-pen"></i>
+                    </button>
+
+                    <button class="btn btn-outline-danger btn-eliminar"
+                            data-id="@item.idEmpleado">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal para agregar o editar empleado -->
+<div class="modal fade" id="modalEmpleado" tabindex="-1" role="dialog" aria-labelledby="modalEmpleadoLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="form-empleado">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEmpleadoTitle">Agregar Empleado</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <input type="hidden" name="idEmpleado" id="input-id-empleado" />
+
+                    <div class="form-group">
+                        <label for="input-dpi">DPI:</label>
+                        <input type="text" class="form-control" name="Dpi" id="input-dpi" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-nombre">Nombre:</label>
+                        <input type="text" class="form-control" name="Nombre" id="input-nombre" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-apellido">Apellido:</label>
+                        <input type="text" class="form-control" name="Apellido" id="input-apellido" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-puesto">Puesto:</label>
+                        <input type="text" class="form-control" name="Puesto" id="input-puesto" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-correo">Correo Electrónico:</label>
+                        <input type="email" class="form-control" name="CorreoElectronico" id="input-correo" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-telefono">Teléfono:</label>
+                        <input type="text" class="form-control" name="Telefono" id="input-telefono" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-fecha">Fecha de Contratación:</label>
+                        <input type="date" class="form-control" name="FechaContratacion" id="input-fecha" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="select-idrol">Rol:</label>
+                        @Html.DropDownList("IdRol", ViewBag.Roles as SelectList, "Seleccione", new { @class = "form-control", id = "select-idrol", required = "required" })
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-sueldo">Sueldo:</label>
+                        <input type="number" class="form-control" name="Sueldo" id="input-sueldo" min="0" step="0.01" required />
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Eliminación -->
+<div class="modal fade" id="eliminarEmpleado" tabindex="-1" role="dialog" aria-labelledby="eliminarEmpleadoLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form id="form-eliminar-empleado">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="eliminarDetalleEmpleadoLabel">Eliminar Empleado</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea eliminar el Empleado con ID <strong>#<span id="empleado-id-eliminar"></span></strong>?</p>
+                    <input type="hidden" id="input-id-eliminar" name="IdEmpleado" />
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        let esEdicion = false;
+
+        document.querySelectorAll(".btn-secondary").forEach(btn => {
+            btn.addEventListener("click", function () {
+                document.getElementById("form-empleado").reset();
+                $("#modalEmpleado").modal("hide");
+                $("#eliminarEmpleado").modal("hide");
+                esEdicion = false;
+            });
+        });
+
+        document.getElementById("btn-agregar-empleado").addEventListener("click", function () {
+            document.getElementById("modalEmpleadoTitle").textContent = "Agregar Empleado";
+            document.getElementById("form-empleado").reset();
+            $("#modalEmpleado").modal("show");
+            esEdicion = false;
+        });
+
+        document.querySelectorAll(".edit-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+
+                document.getElementById("modalEmpleadoTitle").textContent = "Editar Empleado";
+                document.getElementById("input-id-empleado").value = btn.dataset.id;
+                document.getElementById("input-dpi").value = btn.dataset.dpi;
+                document.getElementById("input-nombre").value = btn.dataset.nombre;
+                document.getElementById("input-apellido").value = btn.dataset.apellido;
+                document.getElementById("input-puesto").value = btn.dataset.puesto;
+                document.getElementById("input-correo").value = btn.dataset.correoElectronico;
+                document.getElementById("input-telefono").value = btn.dataset.telefono;
+                document.getElementById("input-fecha").value = btn.dataset.fechaContratacion;
+                document.getElementById("select-idrol").value = btn.dataset.idRol;
+                document.getElementById("input-sueldo").value = btn.dataset.sueldo;
+                esEdicion = true;
+                $("#modalEmpleado").modal("show");
+            });
+        });
+
+        document.querySelectorAll(".btn-eliminar").forEach(btn => {
+            btn.addEventListener("click", function () {
+                const idEmpleado = btn.dataset.id;
+                document.getElementById("empleado-id-eliminar").textContent = idEmpleado;
+                document.getElementById("input-id-eliminar").value = idEmpleado;
+                $("#eliminarEmpleado").modal("show");
+            })
+        });
+
+        // Agregar o Editar Empleado
+        document.getElementById("form-empleado").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const url = esEdicion ? '@Url.Action("Editar", "Empleado")' : '@Url.Action("Agregar", "Empleado")';
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'RequestVerificationToken': token
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: esEdicion ? 'Empleado editado correctamente.' : 'Empleado agregado correctamente.'
+                    }).then(() => {
+                        $("#modalEmpleado").modal("hide");
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message
+                    });
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al procesar la solicitud.'
+                });
+            });
+        });
+
+        // Eliminar Empleado
+        document.getElementById("form-eliminar-empleado").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const id = document.getElementById("input-id-eliminar").value;
+
+            //fetch with query params
+            const url = '@Url.Action("Eliminar", "Empleado")' + '?id=' + id;
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'RequestVerificationToken': token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: 'Empleado eliminado correctamente.'
+                    }).then(() => {
+                        $("#eliminarEmpleado").modal("hide");
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message
+                    });
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al procesar la solicitud.'
+                });
+            });
+        });
+
+        // Buscar Empleado por ID
+        document.getElementById("btn-buscar").addEventListener("click", function () {
+            const id = document.getElementById("buscar-id").value.trim();
+            const filas = document.querySelectorAll("tbody tr");
+
+            let encontrado = false;
+             const url = '@Url.Action("BuscarPorId", "Empleado")' + '?id=' + id;
+             fetch(url)
+                 .then(response => response.json())
+                 .then(data => {
+                     if (data.success) {
+                         // Aquí puedes mostrar los datos del empleado encontrado
+                         console.log(data.data);
+                         actualizarTablaConResultados(data.data);
+                     } else {
+                         Swal.fire({
+                             icon: 'error',
+                             title: 'Error',
+                             text: data.message
+                         });
+                     }
+                 }).catch(error => {
+                     console.error('Error:', error);
+                     Swal.fire({
+                         icon: 'error',
+                         title: 'Error',
+                         text: 'Ocurrió un error al procesar la solicitud.'
+                     });
+                 });
+        });
+
+        function actualizarTablaConResultados(empleados) {
+            const tbody = document.querySelector('table tbody');
+            tbody.innerHTML = '';
+
+            // Si es un solo empleado, convertirlo en array
+            if (!Array.isArray(empleados)) {
+                empleados = [empleados];
+            }
+
+            // Generar las filas de la tabla con los empleados
+            empleados.forEach(empleado => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+            <td>${empleado.idEmpleado}</td>
+            <td>${empleado.Dpi}</td>
+            <td>${empleado.Nombre}</td>
+            <td>${empleado.Apellido}</td>
+            <td>${empleado.Puesto}</td>
+            <td>${empleado.CorreoElectronico}</td>
+            <td>${empleado.Telefono}</td>
+            <td>${empleado.FechaContratacion}</td>
+            <td>${empleado.IdRol}</td>
+            <td>${empleado.nombreRol}</td>
+            <td>${empleado.Sueldo}</td>
+            <td>
+                <button class="btn btn-sm btn-info edit-btn"
+                        data-id="${empleado.idEmpleado}"
+                        data-dpi="${empleado.Dpi}"
+                        data-nombre="${empleado.Nombre}"
+                        data-apellido="${empleado.Apellido}"
+                        data-puesto="${empleado.Puesto}"
+                        data-correo-electronico="${empleado.CorreoElectronico}"
+                        data-telefono="${empleado.Telefono}"
+                        data-fecha-contratacion="${empleado.FechaContratacion}"
+                        data-id-rol="${empleado.IdRol}"
+                        data-nombre-rol="${empleado.nombreRol}"
+                        data-sueldo="${empleado.Sueldo}">
+                    <i class="fa fa-pen"></i>
+                </button>
+
+                <button class="btn btn-outline-danger btn-eliminar"
+                        data-id="${empleado.idEmpleado}">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </td>
+        `;
+                tbody.appendChild(tr);
+            });
+
+            // Volver a agregar los event listeners a los botones recién creados
+            agregarEventosABotones();
+        }
+
+        function agregarEventosABotones() {
+            // Evento para botones de editar
+            document.querySelectorAll(".edit-btn").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    document.getElementById("modalEmpleadoTitle").textContent = "Editar Empleado";
+                    document.getElementById("input-id-empleado").value = btn.dataset.id;
+                    document.getElementById("input-dpi").value = btn.dataset.dpi;
+                    document.getElementById("input-nombre").value = btn.dataset.nombre;
+                    document.getElementById("input-apellido").value = btn.dataset.apellido;
+                    document.getElementById("input-puesto").value = btn.dataset.puesto;
+                    document.getElementById("input-correo").value = btn.dataset.correoElectronico;
+                    document.getElementById("input-telefono").value = btn.dataset.telefono;
+                    document.getElementById("input-fecha").value = btn.dataset.fechaContratacion;
+                    document.getElementById("select-idrol").value = btn.dataset.idRol;
+                    document.getElementById("input-sueldo").value = btn.dataset.sueldo;
+                    esEdicion = true;
+                    $("#modalEmpleado").modal("show");
+                });
+            });
+
+            // Evento para botones de eliminar
+            document.querySelectorAll(".btn-eliminar").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const idEmpleado = btn.dataset.id;
+                    document.getElementById("empleado-id-eliminar").textContent = idEmpleado;
+                    document.getElementById("input-id-eliminar").value = idEmpleado;
+                    $("#eliminarEmpleado").modal("show");
+                });
+            });
+        }
+    });
+</script>
