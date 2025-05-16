@@ -1,0 +1,252 @@
+﻿@model List<FerreteriaWebApp.Models.ClientesModel>
+
+@{
+    ViewBag.Title = "Clientes";
+}
+
+<h1>Clientes</h1>
+@Html.AntiForgeryToken()
+
+<input type="hidden" name="__RequestVerificationToken" value="@HttpContext.Current.Request.Cookies["__RequestVerificationToken"]?.Value" />
+
+<!-- BOTÓN AGREGAR -->
+<button id="btn-agregar-cliente" class="btn btn-outline-success mb-3">
+    <i class="fa fa-plus"></i> Agregar Cliente
+</button>
+
+<!-- BUSCAR POR ID -->
+<div class="input-group mb-3">
+    <input type="number" id="buscar-id" class="form-control" placeholder="Buscar por ID de Cliente" />
+    <button id="btn-buscar" class="btn btn-outline-primary">
+        <i class="fa fa-search"></i> Buscar
+    </button>
+</div>
+
+<!-- TABLA DE CLIENTES -->
+<table class="table table-striped table-bordered table-hover">
+    <thead class="bg-warning text-dark">@*  *@
+        <tr>
+            <th>ID</th>
+            <th>DPI</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>NIT</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.IdCliente</td>
+                <td>@item.Dpi</td>
+                <td>@item.Nombre</td>
+                <td>@item.Apellido</td>
+                <td>@item.NIT</td>
+                <td>@item.CorreoElectronico</td>
+                <td>@item.Telefono</td>
+                <td>
+                    <button class="btn btn-sm btn-info edit-btn"
+                            data-id="@item.IdCliente"
+                            data-dpi="@item.Dpi"
+                            data-nombre="@item.Nombre"
+                            data-apellido="@item.Apellido"
+                            data-nit="@item.NIT"
+                            data-correo="@item.CorreoElectronico"
+                            data-telefono="@item.Telefono">
+                        <i class="fa fa-pen"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-btn"
+                            data-id="@item.IdCliente"
+                            data-nombre="@item.Nombre">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+        // AGREGAR
+        document.getElementById("btn-agregar-cliente").addEventListener("click", function () {
+            Swal.fire({
+                title: 'Agregar Cliente',
+                html: `
+                    <input id="dpi" class="swal2-input" placeholder="DPI" />
+                    <input id="nombre" class="swal2-input" placeholder="Nombre" />
+                    <input id="apellido" class="swal2-input" placeholder="Apellido" />
+                    <input id="nit" class="swal2-input" placeholder="NIT" />
+                    <input id="correo" class="swal2-input" placeholder="Correo Electrónico" />
+                    <input id="telefono" class="swal2-input" placeholder="Teléfono" />
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Agregar',
+                preConfirm: () => {
+                    return {
+                        Dpi: document.getElementById("dpi").value,
+                        Nombre: document.getElementById("nombre").value,
+                        Apellido: document.getElementById("apellido").value,
+                        NIT: document.getElementById("nit").value,
+                        CorreoElectronico: document.getElementById("correo").value,
+                        Telefono: document.getElementById("telefono").value
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Clientes/AgregarCliente', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify(result.value)
+                    }).then(response => {
+                        if (response.ok) {
+                            Swal.fire('Agregado', 'Cliente agregado correctamente.', 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', 'No se pudo agregar el cliente.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // EDITAR
+        $(".edit-btn").click(function () {
+            const btn = $(this);
+            Swal.fire({
+                title: 'Editar Cliente',
+                html: `
+                    <input id="nombre" class="swal2-input" value="${btn.data("nombre")}" />
+                    <input id="apellido" class="swal2-input" value="${btn.data("apellido")}" />
+                    <input id="dpi" class="swal2-input" value="${btn.data("dpi")}" />
+                    <input id="nit" class="swal2-input" value="${btn.data("nit")}" />
+                    <input id="correo" class="swal2-input" value="${btn.data("correo")}" />
+                    <input id="telefono" class="swal2-input" value="${btn.data("telefono")}" />
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                preConfirm: () => {
+                    return {
+                        IdCliente: btn.data("id"),
+                        Nombre: document.getElementById("nombre").value,
+                        Apellido: document.getElementById("apellido").value,
+                        Dpi: document.getElementById("dpi").value,
+                        NIT: document.getElementById("nit").value,
+                        CorreoElectronico: document.getElementById("correo").value,
+                        Telefono: document.getElementById("telefono").value
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Clientes/EditarCliente', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify(result.value)
+                    }).then(response => {
+                        if (response.ok) {
+                            Swal.fire('Actualizado', 'Cliente editado correctamente.', 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', 'No se pudo editar el cliente.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // ELIMINAR
+        $(".delete-btn").click(function () {
+            const id = $(this).data("id");
+            const nombre = $(this).data("nombre");
+
+            Swal.fire({
+                title: '¿Eliminar cliente?',
+                text: `¿Deseas eliminar a ${nombre}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    fetch('/Clientes/EliminarCliente', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(token && { 'RequestVerificationToken': token })
+                        },
+                        body: JSON.stringify({ idCliente: id })
+                    }).then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Eliminado', data.message, 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // BUSCAR
+        document.getElementById("btn-buscar").addEventListener("click", async function () {
+            const id = document.getElementById("buscar-id").value.trim();
+            const url = `/Clientes/BuscarPorId?id=${id}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const tbody = document.querySelector("table tbody");
+            tbody.innerHTML = "";
+
+            const clientes = Array.isArray(data) ? data : [data];
+            clientes.forEach(cliente => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${cliente.IdCliente}</td>
+                    <td>${cliente.Dpi}</td>
+                    <td>${cliente.Nombre}</td>
+                    <td>${cliente.Apellido}</td>
+                    <td>${cliente.NIT}</td>
+                    <td>${cliente.CorreoElectronico}</td>
+                    <td>${cliente.Telefono}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info edit-btn"
+                                data-id="${cliente.IdCliente}"
+                                data-nombre="${cliente.Nombre}"
+                                data-apellido="${cliente.Apellido}"
+                                data-dpi="${cliente.Dpi}"
+                                data-nit="${cliente.NIT}"
+                                data-correo="${cliente.CorreoElectronico}"
+                                data-telefono="${cliente.Telefono}">
+                            <i class="fa fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-btn"
+                                data-id="${cliente.IdCliente}"
+                                data-nombre="${cliente.Nombre}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        });
+    });
+    </script>
+}
+
+@{
+    ViewBag.Title = "View";
+}
+
+<h2>View</h2>
+
