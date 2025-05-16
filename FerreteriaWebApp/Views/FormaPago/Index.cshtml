@@ -174,7 +174,6 @@
                 const id = this.dataset.id;
                 const nombre = this.dataset.descripcion;
                 const descripcion = this.dataset.nombre;
-                debugger;
                 Swal.fire({
                     title: '¿Estás seguro?',
                     text: `¿Deseas eliminar la forma de pago "${nombre}"?`,
@@ -213,7 +212,6 @@
         document.getElementById("btn-buscar").addEventListener("click", async function () {
             const id = document.getElementById("buscar-id").value.trim();
             const url = `/FormaPago/BuscarPorId?id=${id}`;
-            debugger;
             const response = await fetch(url);
             const data = await response.json();
 

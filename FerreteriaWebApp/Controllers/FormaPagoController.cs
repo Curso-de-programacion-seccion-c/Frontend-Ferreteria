@@ -119,8 +119,8 @@ namespace FerreteriaWebApp.Controllers
                     if (responseAll.IsSuccessStatusCode)
                     {
                         var contenido = await responseAll.Content.ReadAsStringAsync();
-                        var lista = JsonConvert.DeserializeObject<List<FormaPagoModel>>(contenido);
-                        return Json(lista, JsonRequestBehavior.AllowGet);
+                        var lista = JsonConvert.DeserializeObject<ApiResponse<List<FormaPagoModel>>>(contenido);
+                        return Json(lista.data, JsonRequestBehavior.AllowGet);
                     }
                     else
                     {

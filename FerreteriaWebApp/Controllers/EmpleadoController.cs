@@ -7,9 +7,6 @@ using FerreteriaWebApp.Models;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using System.Data.SqlClient;
-using System.Data;
-using System.Configuration;
 
 namespace FerreteriaWebApp.Controllers
 {
@@ -20,155 +17,170 @@ namespace FerreteriaWebApp.Controllers
         public async Task<ActionResult> Index()
         {
             _httpClient.BaseAddress = new Uri("https://localhost:44333/");
-
             var response = await _httpClient.GetAsync($"/api/empleados");
+
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-
                 var resp = JsonConvert.DeserializeObject<CustomApiResponse<List<EmpleadoModel>>>(content);
 
+                ViewBag.Roles = new SelectList(await GetRoles(), "idRol", "Nombre");
                 return View("Index", resp.result);
             }
-            return View();
+
+            return View(new List<EmpleadoModel>());
         }
 
-        [HttpPost]
-        public async Task<ActionResult> AgregarEmpleado(EmpleadoModel Empleado)
+        public async Task<List<RolesModel>> GetRoles()
         {
-            _httpClient.BaseAddress = new Uri("https://localhost:44333/");
-            var json = JsonConvert.SerializeObject(Empleado);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            //_httpClient.BaseAddress = new Uri("https://localhost:44333/");
 
-            var response = await _httpClient.PostAsync($"/api/empleados", content);
+            var response = await _httpClient.GetAsync($"rest/api/obtenerRoles");
 
             if (response.IsSuccessStatusCode)
             {
-                var contentResponse = await response.Content.ReadAsStringAsync();
-                var resp = JsonConvert.DeserializeObject<CustomApiResponse<List<FormaPagoModel>>>(contentResponse);
-                return new HttpStatusCodeResult(200);
+                var content = await response.Content.ReadAsStringAsync();
+                var resp = JsonConvert.DeserializeObject<List<RolesModel>>(content);
+                return resp;
+            }
+
+            return new List<RolesModel>();
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> Agregar(EmpleadoModel empleado)
+        {
+            _httpClient.BaseAddress = new Uri("https://localhost:44333/");
+            var json = JsonConvert.SerializeObject(empleado);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("/api/empleados", content);
+
+            var contentresponse = await response.Content.ReadAsStringAsync();
+            var apiResp = JsonConvert.DeserializeObject<ApiResponsedata<string>>(contentresponse);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return Json(new { success = true, message = "Empleado agregado correctamente." }, JsonRequestBehavior.AllowGet);
             }
             else
             {
-                return new HttpStatusCodeResult(500);
-            }
-        }
-
-        [HttpPost]
-        public async Task<ActionResult> ActualizarEmpleado(EmpleadoModel Empleado)
-        {
-            _httpClient.BaseAddress = new Uri("https://localhost:44333/");
-
-            var newBody = new
-            {
-                Dpi = Empleado.Dpi,
-                Nombre = Empleado.Nombre,
-                Apellido = Empleado.Apellido,
-                Puesto = Empleado.Puesto,
-                CorreoElectronico = Empleado.CorreoElectronico,
-                Telefono = Empleado.Telefono,
-                FechaContratacion = Empleado.FechaContratacion,
-                Sueldo = Empleado.Sueldo
-                // Puedes agregar aquí otros campos que necesites actualizar
-            };
-
-            var json = JsonConvert.SerializeObject(newBody);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-            var response = await _httpClient.PutAsync($"api/empleados/{Empleado.idEmpleado}", content);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var contentResponse = await response.Content.ReadAsStringAsync();
-                var resp = JsonConvert.DeserializeObject<CustomApiResponse<List<EmpleadoModel>>>(contentResponse);
-                return new HttpStatusCodeResult(200);
-            }
-            else
-            {
-                return new HttpStatusCodeResult(500);
-            }
-        }
-
-        [HttpPost]
-        public async Task<ActionResult> EliminarEmpleado(int idEmpleado)
-        {
-            _httpClient.BaseAddress = new Uri("https://localhost:44333/");
-            var response = await _httpClient.DeleteAsync($"api/empleados/{idEmpleado}");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var contentReponse = await response.Content.ReadAsStringAsync();
-                var FormaPagoResponse = JsonConvert.DeserializeObject<CustomApiResponse<string>>(contentReponse);
-
-                if (FormaPagoResponse.status != 200)
+                if (apiResp.Status == 500)
                 {
-                    if (FormaPagoResponse.message.Contains("FK"))
+                    return Json(new { success = false, message = "Error al agregar el empleado." }, JsonRequestBehavior.AllowGet);
+                }
+                else
+                {
+                    return Json(new { success = false, message = apiResp.Message }, JsonRequestBehavior.AllowGet);
+                }
+            }
+
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> Editar(EmpleadoModel empleado)
+        {
+            _httpClient.BaseAddress = new Uri("https://localhost:44333/");
+            var json = JsonConvert.SerializeObject(empleado);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PutAsync($"/api/empleados/{empleado.idEmpleado}", content);
+
+            var contentresponse = await response.Content.ReadAsStringAsync();
+            var apiResp = JsonConvert.DeserializeObject<ApiResponsedata<string>>(contentresponse);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return Json(new { success = true, message = "Empleado editado correctamente." }, JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                if (apiResp.Status == 500)
+                {
+                    return Json(new { success = false, message = "Error al editar el empleado." }, JsonRequestBehavior.AllowGet);
+                }
+                else
+                {
+                    return Json(new { success = false, message = apiResp.Message }, JsonRequestBehavior.AllowGet);
+                }
+            }
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> Eliminar(int id)
+        {
+            _httpClient.BaseAddress = new Uri("https://localhost:44333/");
+            var response = await _httpClient.DeleteAsync($"/api/empleados/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var apiResp = JsonConvert.DeserializeObject<CustomApiResponse<string>>(content);
+
+                if (apiResp.status != 200)
+                {
+                    if (apiResp.message.Contains("FK"))
                     {
                         return Json(new { success = false, message = "Error al eliminar el empleado." }, JsonRequestBehavior.AllowGet);
                     }
                 }
-                return Json(new { success = true, message = "El empleado ha sido eliminada correctamente." }, JsonRequestBehavior.AllowGet);
+
+                return Json(new { success = true, message = "Empleado eliminado correctamente." }, JsonRequestBehavior.AllowGet);
             }
             else
             {
-                return new HttpStatusCodeResult(500);
+                var content = await response.Content.ReadAsStringAsync();
+                var apiResp = JsonConvert.DeserializeObject<CustomApiResponse<string>>(content);
+                return Json(new { success = false, message = apiResp.message }, JsonRequestBehavior.AllowGet);
             }
         }
 
-        public async Task<ActionResult> BuscarPorId(int? id)
+        public async Task<JsonResult> BuscarPorId(int? id)
         {
             _httpClient.BaseAddress = new Uri("https://localhost:44333/");
 
-            // Si no hay ID, obtenemos todos los roles
-            if (id == null || id == 0)
+            if(id == null)
             {
-
-                if (id == null || id == 0)
+                //Buscar todos
+                var response = await _httpClient.GetAsync($"/api/empleados");
+                if (response.IsSuccessStatusCode)
                 {
-                    var responseAll = await _httpClient.GetAsync("/api/empleados");
-                    if (responseAll.IsSuccessStatusCode)
-                    {
-                        var contenido = await responseAll.Content.ReadAsStringAsync();
-                        var lista = JsonConvert.DeserializeObject<CustomApiResponse<List<EmpleadoModel>>>(contenido);
-                        return Json(lista.result, JsonRequestBehavior.AllowGet);
-                    }
-                    else
-                    {
-                        return new HttpStatusCodeResult(500, "Error al obtener los empleados.");
-                    }
+                    var content = await response.Content.ReadAsStringAsync();
+                    var resp = JsonConvert.DeserializeObject<CustomApiResponse<List<EmpleadoModel>>>(content);
+                    return Json(new { success = true, data = resp.result }, JsonRequestBehavior.AllowGet);
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Error al buscar empleados.", data = new List<EmpleadoModel>() }, JsonRequestBehavior.AllowGet);
                 }
             }
 
-            // Si hay ID, buscamos uno específico
-            var response = await _httpClient.GetAsync($"/api/empleados/{id}");
-            if (response.IsSuccessStatusCode)
+            var responseId = await _httpClient.GetAsync($"/api/empleados/{id}");
+            if (responseId.IsSuccessStatusCode)
             {
-                var contenido = await response.Content.ReadAsStringAsync();
-                var empleado = JsonConvert.DeserializeObject<ApiResponsedata<EmpleadoModel>>(contenido);
-                return Json(empleado.data, JsonRequestBehavior.AllowGet);
+                var content = await responseId.Content.ReadAsStringAsync();
+                var resp = JsonConvert.DeserializeObject<ApiResponsedata<EmpleadoModel>>(content);
+                return Json(new { success = true, data = resp.data }, JsonRequestBehavior.AllowGet);
             }
             else
             {
-                return new HttpStatusCodeResult(500, "Error al buscar empleado.");
+                return Json(new { success = false, message = "Error al buscar empleado.", data = new List<EmpleadoModel>() }, JsonRequestBehavior.AllowGet);
             }
-
-
         }
+
+        // Estructuras para mapear respuesta de API
         public class CustomApiResponse<T>
         {
             public int status { get; set; }
             public string message { get; set; }
             public T result { get; set; }
         }
+
         public class ApiResponsedata<T>
         {
-            [JsonProperty("status")]
-            public int StatusCode { get; set; }
+            public int Status { get; set; }
             public string Message { get; set; }
             public T data { get; set; }
         }
     }
-
 }
-
-
-
