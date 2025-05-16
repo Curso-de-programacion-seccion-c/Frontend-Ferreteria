@@ -1,0 +1,381 @@
+﻿@model List<FerreteriaWebApp.Models.ClientesModel>
+@{
+    ViewBag.Title = "Clientes";
+}
+
+<h2>Listado de Clientes</h2>
+
+<!-- Botón Agregar -->
+<button id="btn-agregar-cliente" class="btn btn-outline-success mb-3">
+    <i class="fa fa-plus"></i> Agregar Cliente
+</button>
+
+<!-- Buscar -->
+<div class="input-group mb-3">
+    <input type="number" id="buscar-id" class="form-control" placeholder="Buscar por ID" />
+    <button id="btn-buscar" class="btn btn-outline-primary">
+        <i class="fa fa-search"></i> Buscar
+    </button>
+</div>
+
+<!-- Tabla de Clientes -->
+<table class="table table-striped table-bordered">
+    <thead class="bg-warning text-dark">
+        <tr>
+            <th>ID</th>
+            <th>Dpi</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Nit</th>
+            <th>Correo Electronico</th>
+            <th>Telefono</th>
+            <th>Fecha Registro</th>
+            <th>Acciones</th>
+        </tr>
+
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.IdCliente</td>
+                <td>@item.Dpi</td>
+                <td>@item.Nombre</td>
+                <td>@item.Apellido</td>
+                <td>@item.NIT</td>
+                <td>@item.CorreoElectronico</td>
+                <td>@item.Telefono</td>
+                <td>@item.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <button class="btn btn-sm btn-info edit-btn"
+                            data-id="@item.IdCliente"
+                            data-dpi="@item.Dpi"
+                            data-nombre="@item.Nombre"
+                            data-apellido="@item.Apellido"
+                            data-nit="@item.NIT"
+                            data-correo-electronico="@item.CorreoElectronico"
+                            data-telefono="@item.Telefono"
+                            data-fecha-registro="@item.FechaRegistro.ToString("yyyy-MM-dd")">
+                        <i class="fa fa-pen"></i>
+                    </button>
+
+                    <button class="btn btn-outline-danger btn-eliminar" data-id="@item.IdCliente">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal para agregar o editar cliente -->
+<div class="modal fade" id="modalCliente" tabindex="-1" role="dialog" aria-labelledby="modalClienteLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="form-cliente">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalClienteTitle">Agregar Cliente</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <input type="hidden" name="IdCliente" id="input-id-cliente" />
+
+                    <div class="form-group">
+                        <label for="input-dpi">DPI:</label>
+                        <input type="text" class="form-control" name="Dpi" id="input-dpi" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-nombre">Nombre:</label>
+                        <input type="text" class="form-control" name="Nombre" id="input-nombre" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-apellido">Apellido:</label>
+                        <input type="text" class="form-control" name="Apellido" id="input-apellido" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-nit">NIT:</label>
+                        <input type="text" class="form-control" name="NIT" id="input-nit" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-correo">Correo Electrónico:</label>
+                        <input type="email" class="form-control" name="CorreoElectronico" id="input-correo" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-telefono">Teléfono:</label>
+                        <input type="text" class="form-control" name="Telefono" id="input-telefono" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-fecha-registro">Fecha de Registro:</label>
+                        <input type="date" class="form-control" name="FechaRegistro" id="input-fecha-registro" required />
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Eliminación de Cliente -->
+<div class="modal fade" id="eliminarCliente" tabindex="-1" role="dialog" aria-labelledby="eliminarClienteLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form id="form-eliminar-cliente">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="eliminarClienteLabel">Eliminar Cliente</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea eliminar el Cliente con ID <strong>#<span id="cliente-id-eliminar"></span></strong>?</p>
+                    <input type="hidden" id="input-id-eliminar" name="IdCliente" />
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        let esEdicion = false;
+
+        document.querySelectorAll(".btn-secondary").forEach(btn => {
+            btn.addEventListener("click", function () {
+                document.getElementById("modalCliente").modal("hide");
+                document.getElementById("eliminarCliente").modal("hide");
+                esEdicion = false;
+            });
+        });
+
+        document.getElementById("btn-agregar-cliente").addEventListener("click", function () {
+            document.getElementById("modalClienteTitle").textContent = "Agregar Cliente";
+            document.getElementById("form-cliente").reset();
+            esEdicion = false;
+            $("#modalCliente").modal("show");
+        });
+
+        document.querySelectorAll(".edit-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                document.getElementById("modalClienteTitle").textContent = "Editar Cliente";
+                document.getElementById("input-id-cliente").value = this.dataset.id;
+                document.getElementById("input-dpi").value = this.dataset.dpi;
+                document.getElementById("input-nombre").value = this.dataset.nombre;
+                document.getElementById("input-apellido").value = this.dataset.apellido;
+                document.getElementById("input-nit").value = this.dataset.nit;
+                document.getElementById("input-correo").value = this.dataset.correoElectronico;
+                document.getElementById("input-telefono").value = this.dataset.telefono;
+                document.getElementById("input-fecha-registro").value = this.dataset.fechaRegistro.substring(0, 10);
+
+                esEdicion = true;
+                $("#modalCliente").modal("show");
+            });
+        });
+
+        document.querySelectorAll(".btn-eliminar").forEach(btn => {
+            btn.addEventListener("click", function () {
+                document.getElementById("cliente-id-eliminar").textContent = this.dataset.id;
+                document.getElementById("input-id-eliminar").value = this.dataset.id;
+                $("#eliminarCliente").modal("show");
+            });
+        });
+
+        // Agregar o editar cliente
+        document.getElementById("form-cliente").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const url = esEdicion ? '@Url.Action("Editar", "Clientes")' : '@Url.Action("Agregar", "Clientes")';
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'RequestVerificationToken': token
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: data.message,
+                    }).then(() => {
+                        $("#modalCliente").modal("hide");
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message,
+                    }).then(() => {
+                        $("#modalCliente").modal("hide");
+                        location.reload();
+                    });
+                }
+            });
+        });
+
+        // Eliminar cliente
+        document.getElementById("form-eliminar-cliente").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('@Url.Action("Eliminar", "Clientes")', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'RequestVerificationToken': token
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: data.message,
+                    }).then(() => {
+                        $("#eliminarCliente").modal("hide");
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message,
+                    }).then(() => {
+                        $("#eliminarCliente").modal("hide");
+                        location.reload();
+                    });
+                }
+            });
+        });
+
+        // Buscar cliente por ID
+        document.getElementById("btn-buscar").addEventListener("click", function () {
+            const id = document.getElementById("buscar-id").value;
+
+            const url = '@Url.Action("BuscarPorId", "Clientes")' + '?id=' + id;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'RequestVerificationToken': token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: id })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                if (data.success) {
+                    actualizarTablaConResultados(data.data);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: data.message,
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message,
+                    });
+                }
+            });
+        });
+
+        function actualizarTablaConResultados(clientes) {
+            const body = document.querySelector("tbody");
+            body.innerHTML = ""; // Limpiar la tabla
+
+            if (!Array.isArray(clientes)) {
+                clientes = [clientes]; // Asegurarse de que sea un array
+            }
+
+            clientes.forEach(cliente => {
+                const fechaObj = cliente.FechaRegistro ? new Date(cliente.FechaRegistro) : null;
+                const fechaFormateada = fechaObj && !isNaN(fechaObj) ? fechaObj.toLocaleDateString() : '';
+                const fechaInput = fechaObj && !isNaN(fechaObj) ? fechaObj.toISOString().substring(0, 10) : '';
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${cliente.IdCliente}</td>
+                    <td>${cliente.Dpi}</td>
+                    <td>${cliente.Nombre}</td>
+                    <td>${cliente.Apellido}</td>
+                    <td>${cliente.NIT}</td>
+                    <td>${cliente.CorreoElectronico}</td>
+                    <td>${cliente.Telefono}</td>
+                    <td>${fechaFormateada}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info edit-btn"
+                                data-id="${cliente.IdCliente}"
+                                data-dpi="${cliente.Dpi}"
+                                data-nombre="${cliente.Nombre}"
+                                data-apellido="${cliente.Apellido}"
+                                data-nit="${cliente.NIT}"
+                                data-correo-electronico="${cliente.CorreoElectronico}"
+                                data-telefono="${cliente.Telefono}"
+                                data-fecha-registro="${fechaInput}">
+                            <i class="fa fa-pen"></i>
+                        </button>
+
+                        <button class="btn btn-outline-danger btn-eliminar" data-id="${cliente.IdCliente}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+
+                body.appendChild(tr);
+            });
+
+            // Reasignar los eventos a los botones de editar y eliminar
+            document.querySelectorAll(".edit-btn").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    document.getElementById("modalClienteTitle").textContent = "Editar Cliente";
+                    document.getElementById("input-id-cliente").value = this.dataset.id;
+                    document.getElementById("input-dpi").value = this.dataset.dpi;
+                    document.getElementById("input-nombre").value = this.dataset.nombre;
+                    document.getElementById("input-apellido").value = this.dataset.apellido;
+                    document.getElementById("input-nit").value = this.dataset.nit;
+                    document.getElementById("input-correo").value = this.dataset.correoElectronico;
+                    document.getElementById("input-telefono").value = this.dataset.telefono;
+                    document.getElementById("input-fecha-registro").value = this.dataset.fechaRegistro;
+
+                    esEdicion = true;
+                    $("#modalCliente").modal("show");
+                });
+            });
+
+            document.querySelectorAll(".btn-eliminar").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    document.getElementById("cliente-id-eliminar").textContent = this.dataset.id;
+                    document.getElementById("input-id-eliminar").value = this.dataset.id;
+                    $("#eliminarCliente").modal("show");
+                });
+            });
+        }
+    });
+</script>
+
