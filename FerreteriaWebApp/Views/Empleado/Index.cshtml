@@ -1,0 +1,333 @@
+﻿@model List<FerreteriaWebApp.Models.EmpleadoModel>
+
+@{
+    ViewBag.Title = "Empleado";
+}
+
+<h1>Empleados</h1>
+
+@Html.AntiForgeryToken()
+
+<!--BÓTÓN DE AGREGAR EMPLEADO-->
+<button id="btn-agregar-Empleado" class="btn btn-outline-success mb-3">
+    <i class="fa fa-plus"></i> Agregar Empleado
+</button>
+<div class="input-group mb-3">
+    <input type="text" class="form-control" placeholder="Buscar por ID" id="buscar-id">
+    <button class="btn btn-outline-primary" type="button" id="btn-buscar">Buscar</button>
+</div>
+
+<!--TABLA-->
+<table class="table table-striped table-bordered table-hover table-striped-columns">
+    <thead class="bg-warning text-dark">
+        <tr>
+            <th>ID</th>
+            <th>DPI</th>
+            <th>NOMBRE</th>
+            <th>APELLIDO</th>
+            <th>PUESTO</th>
+            <th>CORREO</th>
+            <th>TELEFONO</th>
+            <th>FECHA DE CONTRATACION</th>
+            <th>ID ROL</th>
+            <th>ROL</th>
+            <th>SUELDO</th>
+            <th>ACCIONES</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.idEmpleado</td>
+                <td>@item.Dpi</td>
+                <td>@item.Nombre</td>
+                <td>@item.Apellido</td>
+                <td>@item.Puesto</td>
+                <td>@item.CorreoElectronico</td>
+                <td>@item.Telefono</td>
+                <td>@item.FechaContratacion</td>
+                <td>@item.IdRol</td>
+                <td>@item.nombreRol</td>
+                <td>@item.Sueldo</td>
+                <td>
+                    <button class="btn btn-sm btn-info edit-btn"
+                            data-id="@item.idEmpleado"
+                            data-dpi="@item.Dpi"
+                            data-nombre="@item.Nombre"
+                            data-apellido="@item.Apellido"
+                            data-puesto="@item.Puesto"
+                            data-correo="@item.CorreoElectronico"
+                            data-telefono="@item.Telefono"
+                            data-fechacontratacion="@item.FechaContratacion"
+                            data-idrol="@item.IdRol"
+                            data-idusuario="@item.nombreRol"
+                            data-sueldo="@item.Sueldo">
+                        <i class="fa fa-pen"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-btn"
+                            data-id="@item.idEmpleado"
+                            data-nombre="@item.Nombre">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+        // AGREGAR EMPLEADO
+        document.getElementById("btn-agregar-Empleado").addEventListener("click", function () {
+            Swal.fire({
+                title: 'Agregar Nuevo Empleado',
+                html: `
+                    <input id="swal-dpi" class="swal2-input" placeholder="Dpi">
+                    <input id="swal-nombre" class="swal2-input" placeholder="Nombre">
+                    <input id="swal-apellido" class="swal2-input" placeholder="Apellido">
+                    <input id="swal-puesto" class="swal2-input" placeholder="Puesto">
+                    <input id="swal-correo" class="swal2-input" placeholder="Correo">
+                    <input id="swal-telefono" class="swal2-input" placeholder="Teléfono">
+                    <input id="swal-fechacontratacion" class="swal2-input" placeholder="Fecha de contratación">
+                    <input id="swal-idusuario" class="swal2-input" placeholder="ROL">
+                    <input id="swal-sueldo" class="swal2-input" placeholder="Sueldo">
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Agregar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false,
+                preConfirm: () => {
+                    const dpi = document.getElementById('swal-dpi').value.trim();
+                    const nombre = document.getElementById('swal-nombre').value.trim();
+                    const apellido = document.getElementById('swal-apellido').value.trim();
+                    const puesto = document.getElementById('swal-puesto').value.trim();
+                    const correo = document.getElementById('swal-correo').value.trim();
+                    const telefono = document.getElementById('swal-telefono').value.trim();
+                    const fechaContratacion = document.getElementById('swal-fechacontratacion').value.trim();
+                    const idusuario = parseInt(document.getElementById('swal-idusuario').value);
+                    const sueldo = parseFloat(document.getElementById('swal-sueldo').value.trim());
+
+                    if ( !dpi || !nombre || !apellido || !puesto || !correo || !telefono || !idusuario || !fechaContratacion || !sueldo) {
+                        Swal.showValidationMessage("Todos los campos son obligatorios");
+                        return false;
+                    }
+
+                    return {
+                        nombre, apellido, puesto, correo, telefono,
+                        idRol, idusuario, fechaContratacion, sueldo
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Empleado/AgregarEmpleado', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify({
+                            dpi: result.value.dpi,
+                            nombre: result.value.nombre,
+                            apellido: result.value.apellido,
+                            puesto: result.value.puesto,
+                            correo: result.value.correo,
+                            telefono: result.value.telefono,
+                            fechaContratacion: result.value.fechaContratacion,
+                            idRol: result.value.idRol,
+                            idusuario: result.value.idusuario,
+                            sueldo: result.value.sueldo
+                        })
+                    }).then(async response => {
+                        if (response.ok) {
+                            Swal.fire('Agregado', 'El empleado se agregó exitosamente.', 'success')
+                                .then(() => location.reload());
+                        } else {
+                            const errorText = await response.text();
+                            Swal.fire('Error', `No se pudo agregar: ${errorText}`, 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // EDITAR EMPLEADO
+        document.querySelectorAll(".edit-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                const id = this.dataset.id;
+                const dpi = this.dataset.dpi;
+                const nombre = this.dataset.nombre;
+                const apellido = this.dataset.apellido;
+                const puesto = this.dataset.puesto;
+                const correo = this.dataset.correo;
+                const telefono = this.dataset.telefono;
+                const fechaContratacion = this.dataset.fechacontratacion;
+                const idusuario = this.dataset.idusuario;
+                const sueldo = this.dataset.sueldo;
+
+                Swal.fire({
+                    title: 'Editar Empleado',
+                    html: `
+                        <input id="swal-id" class="swal2-input" value="${id}" readonly />
+                        <input id="swal-nombre" class="swal2-input" value="${nombre}" placeholder="Nombre" />
+                        <input id="swal-apellido" class="swal2-input" value="${apellido}" placeholder="Apellido" />
+                        <input id="swal-puesto" class="swal2-input" value="${puesto}" placeholder="Puesto" />
+                        <input id="swal-correo" class="swal2-input" value="${correo}" placeholder="Correo" />
+                        <input id="swal-telefono" class="swal2-input" value="${telefono}" placeholder="Teléfono" />
+                        <input id="swal-fechacontratacion" class="swal2-input" value="${fechaContratacion}" placeholder="Fecha de contratación" />
+                        <input id="swal-idusuario" class="swal2-input" value="${idusuario}" placeholder="ID Usuario" />
+                        <input id="swal-sueldo" class="swal2-input" value="${sueldo}" placeholder="Sueldo" />
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                        const nuevoNombre = document.getElementById('swal-nombre').value.trim();
+                        const nuevoApellido = document.getElementById('swal-apellido').value.trim();
+                        const nuevoPuesto = document.getElementById('swal-puesto').value.trim();
+                        const nuevoCorreo = document.getElementById('swal-correo').value.trim();
+                        const nuevoTelefono = document.getElementById('swal-telefono').value.trim();
+                        const nuevoFechaContratacion = document.getElementById('swal-fechacontratacion').value.trim();
+                        const nuevoIdusuario = parseInt(document.getElementById('swal-idusuario').value);
+                        const nuevoSueldo = parseFloat(document.getElementById('swal-sueldo').value.trim());
+
+                        if ( !nuevoNombre || !nuevoApellido || !nuevoPuesto || !nuevoCorreo || !nuevoTelefono || !nuevoFechaContratacion || !nuevoIdusuario || !nuevoSueldo) {
+                            Swal.showValidationMessage("Todos los campos son obligatorios");
+                            return false;
+                        }
+
+                        return {
+                            idEmpleado: parseInt(id),
+                            Nombre: nuevoNombre,
+                            Apellido: nuevoApellido,
+                            Puesto: nuevoPuesto,
+                            CorreoElectronico: nuevoCorreo,
+                            Telefono: nuevoTelefono,
+                            FechaContratacion: nuevoFechaContratacion,
+                            nombreRol: nuevoIdusuario,
+                            Sueldo: nuevoSueldo
+                        };
+                    }
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        fetch('/Empleado/ActualizarEmpleado', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': token
+                            },
+                            body: JSON.stringify(result.value)
+                        }).then(async response => {
+                            if (response.ok) {
+                                Swal.fire('Actualizado', 'Empleado actualizado.', 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                const errorText = await response.text();
+                                Swal.fire('Error', `No se pudo actualizar: ${errorText}`, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        // ELIMINAR EMPLEADO
+        document.querySelectorAll(".delete-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                const id = this.dataset.id;
+                const nombre = this.dataset.nombre;
+
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: `¿Deseas eliminar el empleado "${nombre}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/Empleado/EliminarEmpleado', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(token && { 'RequestVerificationToken': token })
+                            },
+                            body: JSON.stringify({ idEmpleado: parseInt(id) })
+                        }).then(async response => {
+                            if (response.ok) {
+                                Swal.fire('Eliminado', `El empleado "${nombre}" ha sido eliminado.`, 'success')
+                                    .then(() => {
+                                        const row = document.querySelector(`button[data-id="${id}"]`).closest('tr');
+                                        row.remove();
+                                    });
+                            } else {
+                                const errorText = await response.text();
+                                Swal.fire('Error', `No se pudo eliminar: ${errorText}`, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        // BUSCAR EMPLEADO POR ID
+        document.getElementById("btn-buscar").addEventListener("click", async function () {
+            const id = document.getElementById("buscar-id").value.trim();
+            const url = `/Empleado/BuscarPorId?id=${id}`;
+            debugger;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const tbody = document.querySelector("table tbody");
+            tbody.innerHTML = "";
+
+            const empleados = Array.isArray(data) ? data : [data];
+            empleados.forEach(empleado => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${empleado.idEmpleado}</td>
+                    <td>${empleado.Dpi}</td>
+                    <td>${empleado.Nombre}</td>
+                    <td>${empleado.Apellido}</td>
+                    <td>${empleado.Puesto}</td>
+                    <td>${empleado.CorreoElectronico}</td>
+                    <td>${empleado.Telefono}</td>
+                    <td>${empleado.FechaContratacion}</td>
+                    <td>${empleado.IdRol}</td>
+                    <td>${empleado.nombreRol}</td>
+                    <td>${empleado.Sueldo}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info edit-btn"
+                                data-id="${empleado.idEmpleado}"
+                                data-dpi="${empleado.Dpi}"
+                                data-nombre="${empleado.Nombre}"
+                                data-apellido="${empleado.Apellido}"
+                                data-puesto="${empleado.Puesto}"
+                                data-correo="${empleado.CorreoElectronico}"
+                                data-telefono="${empleado.Telefono}"
+                                data-fechacontratacion="${empleado.FechaContratacion}"
+                                data-idrol="${empleado.IdRol}"
+                                data-idusuario="${empleado.nombreRol}"
+                                data-sueldo="${empleado.Sueldo}">
+                            <i class="fa fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-btn"
+                                data-id="${empleado.idEmpleado}"
+                                data-nombre="${empleado.Nombre}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        });
+    });
+</script>

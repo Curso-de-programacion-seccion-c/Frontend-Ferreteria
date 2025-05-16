@@ -1,0 +1,249 @@
+﻿@model List<FerreteriaWebApp.Models.FormaPagoModel>
+
+@{
+    ViewBag.Title = "FormaPago";
+}
+
+<h1>Formas de Pagos</h1>
+@Html.AntiForgeryToken()
+
+<input type="hidden" name="__RequestVerificationToken" value="@HttpContext.Current.Request.Cookies["__RequestVerificationToken"]?.Value" />
+
+<!-- BOTÓN DE AGREGAR -->
+<button id="btn-agregar-formapago" class="btn btn-outline-success mb-3">
+    <i class="fa fa-plus"></i> Agregar Forma de Pago
+</button>
+
+<!-- BUSCADOR -->
+<div class="input-group mb-3">
+    <input type="number" id="buscar-id" class="form-control" placeholder="Buscar por ID de FormaPago" />
+    <button id="btn-buscar" class="btn btn-outline-primary">
+        <i class="fa fa-search"></i> Buscar
+    </button>
+</div>
+
+<!-- TABLA -->
+<table class="table table-striped table-bordered table-hover">
+    <thead class="bg-warning text-dark">
+        <tr>
+            <th>ID</th>
+            <th>Nombre Forma de Pago</th>
+            <th>Descripcion</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.IdFormaPago</td>
+                <td>@item.NombreFormaPago</td>
+                <td>@item.Descripcion</td>
+                <td>
+                    <button class="btn btn-sm btn-info edit-btn"
+                            data-id="@item.IdFormaPago"
+                            data-nombre="@item.NombreFormaPago"
+                            data-descripcion="@item.Descripcion">
+                        <i class="fa fa-pen"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-btn"
+                            data-id="@item.IdFormaPago"
+                            data-nombre="@item.NombreFormaPago"
+                            data-descripcion="@item.Descripcion">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+        // AGREGAR
+        document.getElementById("btn-agregar-formapago").addEventListener("click", function () {
+            Swal.fire({
+                title: 'Agregar Nueva Forma de Pago',
+                html: `
+                    <input id="swal-nombre" class="swal2-input" placeholder="Nombre Forma de Pago" />
+                    <input id="swal-descripcion" class="swal2-input" placeholder="Descripción" />
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Agregar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false,
+                preConfirm: () => {
+                    const nombre = document.getElementById('swal-nombre').value.trim();
+                    const descripcion = document.getElementById('swal-descripcion').value.trim();
+
+                    if (!nombre || !descripcion) {
+                        Swal.showValidationMessage("Nombre y Descripción son obligatorios.");
+                        return false;
+                    }
+
+                    return { nombre, descripcion };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/FormaPago/AgregarFormaPago', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify({
+                            NombreFormaPago: result.value.nombre,
+                            Descripcion: result.value.descripcion
+                        })
+                    }).then(async response => {
+                        if (response.ok) {
+                            Swal.fire('Agregado', 'La forma de Pago se agregó exitosamente.', 'success')
+                                .then(() => location.reload());
+                        } else {
+                            const errorText = await response.text();
+                            Swal.fire('Error', `No se pudo agregar: ${errorText}`, 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // EDITAR
+        document.querySelectorAll(".edit-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                const id = this.dataset.id;
+                const nombre = this.dataset.nombre;
+                const descripcion = this.dataset.descripcion;
+
+                Swal.fire({
+                    title: 'Editar Forma de Pago',
+                    html: `
+                        <input id="swal-id" class="swal2-input" value="${id}" readonly />
+                        <input id="swal-nombre" class="swal2-input" value="${nombre}" placeholder="Nombre" />
+                        <input id="swal-descripcion" class="swal2-input" value="${descripcion}" placeholder="Descripción" />
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                        const nuevoNombre = document.getElementById('swal-nombre').value.trim();
+                        const nuevaDescripcion = document.getElementById('swal-descripcion').value.trim();
+                        if (!nuevoNombre || !nuevaDescripcion) {
+                            Swal.showValidationMessage("Nombre y Descripción no pueden estar vacíos.");
+                            return false;
+                        }
+
+                        return {
+                            IdFormaPago: parseInt(id),
+                            NombreFormaPago: nuevoNombre,
+                            Descripcion: nuevaDescripcion
+                        };
+                    }
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        fetch('/FormaPago/ActualizarFormaPago', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': token
+                            },
+                            body: JSON.stringify(result.value)
+                        }).then(async response => {
+                            if (response.ok) {
+                                Swal.fire('Actualizado', 'Forma de pago actualizada.', 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                const errorText = await response.text();
+                                Swal.fire('Error', `No se pudo actualizar: ${errorText}`, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        // ELIMINAR
+        document.querySelectorAll(".delete-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                const id = this.dataset.id;
+                const nombre = this.dataset.descripcion;
+                const descripcion = this.dataset.nombre;
+                debugger;
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: `¿Deseas eliminar la forma de pago "${nombre}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        fetch('/FormaPago/EliminarFormaPago', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(token && { 'RequestVerificationToken': token })
+                            },
+                            body: JSON.stringify({ IdFormaPago: parseInt(id) })
+                        }).then(async response => {
+                            const data = await response.json();
+                            if (data.success) {
+                                Swal.fire('Eliminado', `Forma de Pago "${nombre}" eliminada.`, 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                Swal.fire('Error', `No se pudo eliminar: ${data.message}`, 'error');
+                            }
+                        }).catch(() => {
+                            Swal.fire('Error', 'Error al eliminar la forma de pago.', 'error');
+                        });
+                    }
+                });
+            });
+        });
+
+        // BUSCAR
+        document.getElementById("btn-buscar").addEventListener("click", async function () {
+            const id = document.getElementById("buscar-id").value.trim();
+            const url = `/FormaPago/BuscarPorId?id=${id}`;
+            debugger;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const tbody = document.querySelector("table tbody");
+            tbody.innerHTML = ""; // Limpiar la tabla
+
+            const pagos = Array.isArray(data) ? data : [data];
+            pagos.forEach(pago => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${pago.IdFormaPago}</td>
+                    <td>${pago.NombreFormaPago}</td>
+                    <td>${pago.Descripcion}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info edit-btn"
+                                data-id="${pago.IdFormaPago}"
+                                data-nombre="${pago.NombreFormaPago}"
+                                data-descripcion="${pago.Descripcion}">
+                            <i class="fa fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-btn"
+                                data-id="${pago.IdFormaPago}"
+                                data-nombre="${pago.NombreFormaPago}"
+                                data-descripcion="${pago.Descripcion}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        });
+    });
+</script>
