@@ -1,4 +1,5 @@
 ﻿using FerreteriaWebApp.Models;
+using FerreteriaWebApp.Services;
 using Microsoft.Reporting.WebForms;
 using Newtonsoft.Json;
 using System;
@@ -24,45 +25,57 @@ namespace FerreteriaWebApp.Controllers
             return View("FacturaId", idFactura);
         }
 
+        public ActionResult Factura(int? idFactura)
+        {
+            return View("FacturaId", idFactura);
+        }
+
+        public ActionResult PorFechas()
+        {
+            ViewBag.ReporteGenerado = false;
+            return View("FacturasPorFechas");
+        }
+
+        #region Factura por ID
+
         [HttpGet]
         public async Task<ActionResult> GenerarReporte(int idFactura)
         {
             var datos = await ObtenerDatosFactura(idFactura);
 
-            if (datos == null)
+            var pdfServices = new PdfServices();
+            byte[] pdfReporte = pdfServices.GenerarReporteIdFactura(datos);
+
+            if (pdfReporte == null)
             {
-                return HttpNotFound();
+                return new HttpStatusCodeResult(404, "Datos no encontrados");
             }
 
-            ReportViewer reportViewer = new ReportViewer();
-            reportViewer.ProcessingMode = ProcessingMode.Local;
-            reportViewer.LocalReport.ReportPath = Server.MapPath("~/Reportes/FacturaId.rdlc");
-
-            reportViewer.LocalReport.DataSources.Add(new ReportDataSource("FacturaIdDataSet", datos.Tables[0]));
-
-            byte[] bytes = reportViewer.LocalReport.Render("PDF");
-
-            return File(bytes, "application/pdf", "Factura.pdf");
+            return File(pdfReporte, "application/pdf", $"Factura_{idFactura}.pdf");
         }
 
         public async Task<ActionResult> VisualizarReporte(int idFactura)
         {
             var datos = await ObtenerDatosFactura(idFactura);
-            if (datos == null)
+
+            if(datos == null || datos.Count == 0)
             {
                 return new HttpStatusCodeResult(404, "Datos no encontrados");
             }
 
-            ReportViewer reportViewer = new ReportViewer();
-            reportViewer.ProcessingMode = ProcessingMode.Local;
-            reportViewer.LocalReport.ReportPath = Server.MapPath("~/Reportes/FacturaId.rdlc");
-            reportViewer.LocalReport.DataSources.Add(new ReportDataSource("FacturaIdDataSet", datos.Tables[0]));
+            var pdfServices = new PdfServices();
+            byte[] pdfReporte = pdfServices.GenerarReporteIdFactura(datos);
 
-            byte[] bytes = reportViewer.LocalReport.Render("PDF");
-            return File(bytes, "application/pdf");
+            if (pdfReporte == null)
+            {
+                return new HttpStatusCodeResult(404, "Datos no encontrados");
+            }
+
+            Response.AppendHeader("Content-Disposition", "inline; filename=Factura_" + idFactura + ".pdf");
+            return File(pdfReporte, "application/pdf");
         }
 
-        public async Task<DataSet> ObtenerDatosFactura(int idFactura)
+        public async Task<List<ReporteFacturaDetalle>> ObtenerDatosFactura(int idFactura)
         {
             _httpClient.BaseAddress = new Uri("https://localhost:44333/");
             var response = await _httpClient.GetAsync($"api/Reportes/FacturaDetalle/{idFactura}");
@@ -72,31 +85,115 @@ namespace FerreteriaWebApp.Controllers
 
                 var resp = JsonConvert.DeserializeObject<ApiResponse<List<ReporteFacturaDetalle>>>(content);
 
-                return ConvertToDataSet(resp.data);
+                return resp.data;
+            }
+            return null;
+        }
+        #endregion
+
+
+        #region Reportes por fechas
+        [HttpPost]
+        public async Task<ActionResult> GenerarReportePorFechas(DateTime FechaInicio, DateTime FechaFin)
+        {
+            var reportByDate = new BodyReqReportByDate
+            {
+                fechaInicio = FechaInicio,
+                fechaFin = FechaFin
+            };
+
+            var datos = await ObtenerDatosPorFechas(reportByDate);
+            if (datos == null || datos.Count == 0)
+            {
+                TempData["Error"] = "No se encontraron datos para el rango de fechas seleccionado.";
+                return RedirectToAction("FacturasPorFechas");
+            }
+
+            // Guardar las fechas en ViewBag para que el iframe pueda usarlas
+            ViewBag.FechaInicio = FechaInicio.ToString("yyyy-MM-dd");
+            ViewBag.FechaFin = FechaFin.ToString("yyyy-MM-dd");
+            ViewBag.ReporteGenerado = true;
+
+            return View("FacturasPorFechas");
+        }
+
+        public async Task<List<ResponseReporteFecha>> ObtenerDatosPorFechas(BodyReqReportByDate reportByDate)
+        {
+            _httpClient.BaseAddress = new Uri("https://localhost:44333/");
+
+            var body = new
+            {
+                fechaInicio = reportByDate.fechaInicio.ToString("yyyy-MM-dd"),
+                fechaFin = reportByDate.fechaFin.ToString("yyyy-MM-dd")
+            };
+
+            var json = JsonConvert.SerializeObject(body);
+            var stringContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("api/Reportes/FacturaPorFecha", stringContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var contentResponse = await response.Content.ReadAsStringAsync();
+                var resp = JsonConvert.DeserializeObject<ApiResponse<List<ResponseReporteFecha>>>(contentResponse);
+                return resp.data;
             }
             return null;
         }
 
-        private DataSet ConvertToDataSet(List<ReporteFacturaDetalle> reporteFactura)
+
+        [HttpGet]
+        public async Task<ActionResult> VisualizarReportePorFechas(string fechaInicio, string fechaFin)
         {
-            DataSet ds = new DataSet();
-            DataTable dt = new DataTable();
-
-            // Agrega las columnas necesarias
-            dt.Columns.Add("IdFactura", typeof(int));
-
-            // Agrega las filas
-            foreach (var item in reporteFactura)
+            var reportByDate = new BodyReqReportByDate
             {
-                DataRow row = dt.NewRow();
-                row["IdFactura"] = item.IdFactura;
-                dt.Rows.Add(row);
+                fechaInicio = DateTime.Parse(fechaInicio),
+                fechaFin = DateTime.Parse(fechaFin)
+            };
+
+            var datos = await ObtenerDatosPorFechas(reportByDate);
+            if (datos == null || datos.Count == 0)
+            {
+                return new HttpStatusCodeResult(404, "Datos no encontrados");
             }
 
-            ds.Tables.Add(dt);
-            return ds;
+            var pdfServices = new PdfServices();
+            byte[] pdfReporte = pdfServices.GenerarReportePorFecha(datos, reportByDate.fechaInicio, reportByDate.fechaFin);
+            if (pdfReporte == null)
+            {
+                return new HttpStatusCodeResult(404, "Datos no encontrados");
+            }
+
+            // Configuración importante para mostrar dentro del iframe
+            Response.AppendHeader("Content-Disposition", "inline; filename=FacturasPorFechas.pdf");
+            return File(pdfReporte, "application/pdf");
         }
 
+        [HttpGet]
+        public async Task<ActionResult> DescargarReportePorFechas(string fechaInicio, string fechaFin)
+        {
+            var reportByDate = new BodyReqReportByDate
+            {
+                fechaInicio = DateTime.Parse(fechaInicio),
+                fechaFin = DateTime.Parse(fechaFin)
+            };
 
+            var datos = await ObtenerDatosPorFechas(reportByDate);
+            if (datos == null || datos.Count == 0)
+            {
+                return new HttpStatusCodeResult(404, "Datos no encontrados");
+            }
+
+            var pdfServices = new PdfServices();
+            byte[] pdfReporte = pdfServices.GenerarReportePorFecha(datos, reportByDate.fechaInicio, reportByDate.fechaFin);
+            if (pdfReporte == null)
+            {
+                return new HttpStatusCodeResult(404, "Datos no encontrados");
+            }
+
+            // Para descarga, usamos "attachment" en lugar de "inline"
+            return File(pdfReporte, "application/pdf", $"Reporte_{fechaInicio}_{fechaFin}.pdf");
+        }
+        #endregion
     }
 }

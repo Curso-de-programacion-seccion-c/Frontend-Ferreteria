@@ -1,6 +1,9 @@
 ﻿@model int?
 @{
     ViewBag.Title = "Reporte de Factura";
+    var url = Context.Request.Path.ToString().ToLower();
+    var reportesOpen = url.Contains("/reports/factura") || url.Contains("/reports/porfechas") ? "show" : "";
+    var ariaExpanded = url.Contains("/reports/factura") || url.Contains("/reports/porfechas") ? "true" : "false";
 }
 
 <h2>Generar Reporte de Factura</h2>

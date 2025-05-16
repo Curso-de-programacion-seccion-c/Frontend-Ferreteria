@@ -1,0 +1,36 @@
+﻿@{
+    ViewBag.Title = "FacturasPorFechas";
+    DateTime fechaInicio = DateTime.Now.AddDays(-30);
+    DateTime fechaFin = DateTime.Now;
+}
+
+<h2>Generar Reporte por fechas</h2>
+
+@using (Html.BeginForm("GenerarReportePorFechas", "Reports", FormMethod.Post))
+{
+    <div class="form-group">
+        @Html.Label("FechaInicio", "Fecha de Inicio:")
+        @Html.TextBox("FechaInicio", fechaInicio.ToString("yyyy-MM-dd"), new { @class = "form-control", type = "date" })
+        @Html.Label("FechaFin", "Fecha de Fin:")
+        @Html.TextBox("FechaFin", fechaFin.ToString("yyyy-MM-dd"), new { @class = "form-control", type = "date" })
+
+        <br />
+        <button type="submit" class="btn btn-primary">Generar Reporte</button>
+    </div>
+}
+
+@if (ViewBag.ReporteGenerado != null && ViewBag.ReporteGenerado == true)
+{
+    <hr />
+    <h3>Vista previa del reporte</h3>
+    <div class="mb-3">
+        <a href="@Url.Action("DescargarReportePorFechas", "Reports", new { fechaInicio = ViewBag.FechaInicio, fechaFin = ViewBag.FechaFin })"
+           class="btn btn-success" target="_blank">Descargar PDF</a>
+    </div>
+
+    <!-- Este iframe muestra el PDF generado -->
+    <iframe src="@Url.Action("VisualizarReportePorFechas", "Reports", new { fechaInicio = ViewBag.FechaInicio, fechaFin = ViewBag.FechaFin })"
+            width="100%"
+            height="800px"
+            style="border: none;"></iframe>
+}
