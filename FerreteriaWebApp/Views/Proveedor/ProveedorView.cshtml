@@ -1,0 +1,291 @@
+﻿@model List<FerreteriaWebApp.Models.ProveedorModel>
+
+@{
+   
+   ViewBag.Title = "Proveedor";
+}
+
+<h2>ProveedorView</h2>
+@Html.AntiForgeryToken()
+<input type="hidden" name="__RequestVerificationToken" value="@HttpContext.Current.Request.Cookies["__RequestVerificationToken"]?.Value" />
+
+<!--BÓTÓN DE AGREGAR Proveedor-->
+<button id="btn-agregar-proveedor" class="btn btn-outline-success mb-3">
+    <i class="fa fa-plus"></i> Agregar Proveedor
+</button>
+
+@*boton buscar*@
+<div class="input-group mb-3">
+    <input type="number" id="buscar-id" class="form-control" placeholder="Buscar por ID de Proveedor" />
+    <button id="btn-buscar" class="btn btn-outline-primary">
+        <i class="fa fa-search"></i> Buscar
+    </button>
+</div>
+
+
+<!--TABLA-->
+<table class="table table-striped table-bordered table-hover table-striped-columns">
+    <!--ENCABEZADO DE LA TABLA-->
+    <thead class="bg-warning text-dark">
+        <tr>
+            <th>IdProveedor</th>
+            <th>Nombre Proveedor</th>
+            <th>Telefono</th>
+            <th>Nombre Contacto</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <!--CUERPO DE LA TABLA-->
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.IdProveedor</td>
+                <td>@item.NombreProveedor</td>
+                <td>@item.Telefono</td>
+                <td>@item.NombreContacto</td>
+
+                <!--BÓTÓN EDITAR-->
+                <td>
+                    <button class="btn btn-sm btn-info edit-btn"
+                            data-idproveedor="@item.IdProveedor"
+                            data-nombre="@item.NombreProveedor"
+                            data-telefono="@item.Telefono"
+                            data-nombrecontacto="@item.NombreContacto">
+
+
+                        <i class="fa fa-pen"></i>
+                    </button>
+                    <!--BÓTÓN DE ELIMINAR-->
+                    <button class="btn btn-sm btn-danger delete-btn"
+                            data-id="@item.IdProveedor"
+                            data-nombre="@item.NombreProveedor"
+                            data-telefono="@item.Telefono"
+                            data-nombrecontacto="@item.NombreContacto">
+
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    // Primero carga el HTML y antes de ejecutar el script
+    document.addEventListener("DOMContentLoaded", function () {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+        //<input id="swal-id" class="swal2-input" placeholder="Id">
+        // AGREGAR proveedor
+        document.getElementById("btn-agregar-proveedor").addEventListener("click", function () {
+            Swal.fire({
+                title: 'Agregar Nuevo Proveedor',
+                html: `
+                    <input id="swal-nombre" class="swal2-input" placeholder="Nombre Proveedor" />
+                    <input id="swal-telefono" class="swal2-input" placeholder="Telefono" />
+                    <input id="swal-nombrecontacto" class="swal2-input" placeholder="Nombre Contacto" />
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Agregar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false,
+                preConfirm: () => {
+                    /*                    const code = parseInt(document.getElementById('swal-id').value);*/
+
+                    const nombre = document.getElementById('swal-nombre').value.trim()
+                    const telefono = document.getElementById('swal-telefono').value.trim();
+                    const nombrecontacto = document.getElementById('swal-nombrecontacto').value.trim();
+                    if (!nombre || !telefono || !nombrecontacto) {
+                        Swal.showValidationMessage("Nombre, telefono y nombre contacto son obligatorios.");
+                        return false;
+                    }
+                    return {
+                        nombre: nombre,
+                        telefono: telefono,
+                        nombrecontacto: nombrecontacto
+
+                    };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/Proveedor/AgregarProveedor', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify({
+                            IdProveedor: result.value.id,
+                            NombreProveedor: result.value.nombre,
+                            Telefono: result.value.telefono,
+                            NombreContacto: result.value.nombrecontacto
+
+                        })
+                    }).then(async response => {
+                        if (response.ok) {
+                            Swal.fire('Agregado', 'El proveedor se agregó exitosamente.', 'success')
+                                .then(() => location.reload());
+                        } else {
+                            const errorText = await response.text();
+                            Swal.fire('Error', `No se pudo agregar: ${errorText}`, 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // EDITAR
+        $(document).ready(function () {
+            $(".edit-btn").on("click", function () {
+                const id = $(this).data("idproveedor");
+                const nombre = $(this).data("nombre");
+                const telefono = $(this).data("telefono");
+                const nombrecontacto = $(this).data("nombrecontacto");
+
+                Swal.fire({
+                    title: 'Editar Proveedor',
+                    html: `
+                <input id="swal-nombreproveedor" class="swal2-input" placeholder="Nombre Proveedor" value="${nombre}">
+                <input id="swal-telefono" class="swal2-input" placeholder="Teléfono" value="${telefono}">
+                <input id="swal-nombrecontacto" class="swal2-input" placeholder="Nombre Contacto" value="${nombrecontacto}">
+            `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar',
+                    preConfirm: () => {
+                        return {
+                            id: id,
+                            nombre: document.getElementById('swal-nombreproveedor').value.trim(),
+                            telefono: document.getElementById('swal-telefono').value.trim(),
+                            nombrecontacto: document.getElementById('swal-nombrecontacto').value.trim()
+                        };
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/Proveedor/EditarProveedor', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                            },
+                            body: JSON.stringify({
+                                IdProveedor: result.value.id,
+                                NombreProveedor: result.value.nombre,
+                                Telefono: result.value.telefono,
+                                NombreContacto: result.value.nombrecontacto
+                            })
+                        }).then(async response => {
+                            if (response.ok) {
+                                Swal.fire('Actualizado', 'El proveedor ha sido modificado.', 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                const errorText = await response.text();
+                                Swal.fire('Error', `No se pudo actualizar: ${errorText}`, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+
+
+
+        // ELIMINAR
+        const deleteButtons = document.querySelectorAll(".delete-btn");
+        deleteButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                const id = this.dataset.id;
+                const nombre = this.dataset.nombre;
+                const telefono = this.dataset.telefono;
+                const nombrecontacto = this.dataset.nombrecontacto;
+
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: `¿Deseas eliminar el proveedor "${nombre}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/Proveedor/EliminarProveedor', { //Cambiar por la ruta
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(token && { 'RequestVerificationToken': token })
+                            },
+                            body: JSON.stringify({ IdProveedor: parseInt(id) })
+                        }).then(async response => {
+                            const data = await response.json();
+                            console.log(data);
+                            if (data.success) {
+                                Swal.fire('Eliminado', `El Proveedor "${nombre}" ha sido eliminado.`, 'success')
+                                    .then(() => {
+                                        const row = document.querySelector(`button[data-id="${id}"]`).closest('tr');
+                                        row.remove();
+                                    });
+                            } else {
+                                Swal.fire('Error', `No se pudo eliminar: ${data.message}`, 'error');
+                            }
+                        }).catch(error => {
+                            console.log(error);
+                            Swal.fire('Error', 'Ocurrió un error al eliminar el proveedor.', 'error');
+
+                        });
+                    }
+                });
+            });
+        });
+
+        // BUSCAR
+        document.getElementById("btn-buscar").addEventListener("click", async function () {
+            const id = document.getElementById("buscar-id").value.trim();
+            const url = `/Proveedor/BuscarPorId?id=${id}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const tbody = document.querySelector("table tbody");
+            tbody.innerHTML = ""; // Limpiar la tabla
+
+            const roles = Array.isArray(data) ? data : [data];
+            roles.forEach(rol => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${rol.IdProveedor}</td>
+                    <td>${rol.NombreProveedor}</td>
+                    <td>${rol.Telefono}</td>
+                    <td>${rol.NombreContacto}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info edit-btn"
+                                data-id="${rol.IdProveedor}"
+                                data-nombre="${rol.NombreProveedor}"
+                                data-telefono="${rol.Telefono}"
+                                data-nombrecontacto="${rol.NombreContacto}">
+                            <i class="fa fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-btn"
+                                data-id="${rol.IdProveedor}"
+                                data-nombre="${rol.NombreProveedor}"
+                                data-telefono="${rol.Telefono}"
+                                data-nombrecontacto="${rol.NombreContacto}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+
+        `;
+                tbody.appendChild(row);
+            });
+        });
+
+
+    });
+</script>

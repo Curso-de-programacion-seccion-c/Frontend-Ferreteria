@@ -1,0 +1,470 @@
+﻿@model List<FerreteriaWebApp.Models.UsuarioModel>
+@{
+    ViewBag.Title = "Usuario";
+}
+
+<h2>UsuarioView</h2>
+@Html.AntiForgeryToken()
+<input type="hidden" name="__RequestVerificationToken" value="@HttpContext.Current.Request.Cookies["__RequestVerificationToken"]?.Value" />
+
+<!--BÓTÓN DE AGREGAR Usuario-->
+<button id="btn-agregar-usuario" class="btn btn-outline-success mb-3">
+    <i class="fa fa-plus"></i> Agregar Usuario
+</button>
+
+@*boton buscar*@
+<div class="input-group mb-3">
+    <input type="number" id="buscar-id" class="form-control" placeholder="Buscar por ID de Usuario" />
+    <button id="btn-buscar" class="btn btn-outline-primary">
+        <i class="fa fa-search"></i> Buscar
+    </button>
+</div>
+
+
+<!--TABLA-->
+<table class="table table-striped table-bordered table-hover table-striped-columns">
+    <!--ENCABEZADO DE LA TABLA-->
+    <thead class="bg-warning text-dark">
+        <tr>
+            <th>ID Usuario</th>
+            <th>ID Empleado</th>
+            <th>Codigo Usuario</th>
+            <th>Username</th>
+            <th>IsActive</th>
+            <th>Acciones</th>
+
+
+        </tr>
+    </thead>
+    <!--CUERPO DE LA TABLA-->
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.IdUsuario</td>
+                <td>@item.IdEmpleado</td>
+                <td>@item.CodigoUsuario</td>
+                <td>@item.Username</td>
+                <td>@item.IsActive</td>
+
+               
+
+                <!--BÓTÓN EDITAR-->
+                <td>
+                    <button
+                            class="btn btn-sm btn-info edit-btn"
+                            data-idusuario="@item.IdUsuario"
+                            data-idempleado="@item.IdEmpleado"
+                            data-codigo="@item.CodigoUsuario"
+                            data-username="@item.Username"
+                            data-userpassword="@item.UserPassword"
+                            data-isactive="@item.IsActive">
+                        <i class="fa fa-pen"></i>
+                    </button>
+                    <!--BÓTÓN DE ELIMINAR-->
+                    <button class="btn btn-sm btn-danger delete-btn"
+                            data-id="@item.IdUsuario"
+                            data-idempleado="@item.IdEmpleado"
+                            data-codigo="@item.CodigoUsuario"
+                            data-username="@item.Username"
+                            data-userpassword="@item.UserPassword"
+                            data-isactive="@item.IsActive">
+
+
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+
+    // Primero carga el HTML y antes de ejecutar el script
+    document.addEventListener("DOMContentLoaded", function () {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+        //<input id="swal-id" class="swal2-input" placeholder="Id">
+
+        // AGREGAR usuario
+        document.getElementById("btn-agregar-usuario").addEventListener("click", async function () {
+            // Obtener datos de Empleados
+            esEdicion = false; // Cambiar a modo creación
+            document.getElementById("modal-usuario-title").textContent = "Crear Nuevo Usuario";
+            document.getElementById("form-crear-usuario").reset();
+            document.getElementById("input-id-usuario").value = "";
+
+            await cargarSelect('/Usuario/ListarEmpleado', 'select-empleado', 'idEmpleado', 'Nombre');
+
+            $('#crearUsuarioModal').modal('show');
+        });
+
+        async function cargarSelect(url, selectId, valueField, textField) {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const select = document.getElementById(selectId);
+            select.innerHTML = ''; // Limpiar opciones anteriores
+
+            data.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item[valueField];
+                option.textContent = item[textField];
+                select.appendChild(option);
+            });
+        }
+
+        document.getElementById("form-crear-usuario").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const jsonData = Object.fromEntries(formData.entries());
+            jsonData.idEmpleado = parseInt(jsonData.idEmpleado);
+            jsonData.CodigoUsuario = document.getElementById("input-codigo-usuario").value;
+            jsonData.Username = document.getElementById("input-username").value;
+            jsonData.UserPassword = document.getElementById("input-password").value;
+            jsonData.IsActive = document.getElementById("checkbox-activo").checked ? 1 : 0;
+            const url = esEdicion ? '/Usuario/EditarUsuario' : '/Usuario/AgregarUsuario';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'RequestVerificationToken': token })
+                },
+                body: JSON.stringify(jsonData)
+            }).then(async response => {
+                const data = await response.json();
+                if (data.success) {
+                    Swal.fire(esEdicion ? 'Actualizado' : 'Guardado',
+                        esEdicion ? 'Usuario actualizado correctamente.' : 'Usuario creado correctamente.',
+                        'success')
+                        .then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message || 'Error al procesar la solicitud.', 'error');
+                }
+            }).catch(error => {
+                console.error(error);
+                Swal.fire('Error', 'Error al procesar la solicitud.', 'error');
+            });
+        });
+
+
+        // AGREGAR Usuario
+        /* document.getElementById("btn-agregar-usuario").addEventListener("click", function () {
+             Swal.fire({
+                 title: 'Agregar Nuevo Usuario',
+                 html: `
+
+                 <input id="swal-id" class="swal2-input" placeholder="Id Empleado">
+                 <input id="swal-codigousuario" class="swal2-input" placeholder="Codigo Usuario">
+                 <input id="swal-username" class="swal2-input" placeholder="Username">
+                 <input id="swal-userpassword" class="swal2-input" placeholder="User Password">
+                 <input id="swal-isactive" class="swal2-input" placeholder="IsActive">
+
+
+                 `,
+                 showCancelButton: true,
+                 confirmButtonText: 'Agregar',
+                 cancelButtonText: 'Cancelar',
+                 customClass: {
+                     confirmButton: 'btn btn-success',
+                     cancelButton: 'btn btn-secondary'
+                 },
+                 buttonsStyling: false,
+                 preConfirm: () => {
+
+
+                     const id = document.getElementById('swal-id').value.trim();
+                     const codigousuario = document.getElementById('swal-codigousuario').value.trim();
+                     const username = document.getElementById('swal-username').value.trim();
+                     const userpassword = document.getElementById('swal-userpassword').value.trim();
+                     const isactive = document.getElementById('swal-isactive').value.trim();
+                     if (!id || !codigousuario || !username || !userpassword || !isactive) {
+                         Swal.showValidationMessage("Id, Codigo Usuario, Username, User Password e IsActive son obligatorios.");
+                         return false;
+                     }
+
+                     return {
+                         id: id,
+                         codigousuario: codigousuario,
+                         username: username,
+                         userpassword: userpassword,
+                         isactive: isactive
+
+
+                     };
+                 }
+             }).then((result) => {
+                 if (result.isConfirmed) {
+                     fetch('/Usuario/AgregarUsuario', {
+                         method: 'POST',
+                         headers: {
+                             'Content-Type': 'application/json',
+                             'RequestVerificationToken': token
+                         },
+                         body: JSON.stringify({
+                             IdEmpleado: result.value.id,
+                             CodigoUsuario: result.value.codigousuario,
+                             Username: result.value.username,
+                             UserPassword: result.value.userpassword,
+                             IsActive: result.value.isactive
+
+                         })
+                     }).then(async response => {
+                         const data = await response.json();
+                         if (data.success) {
+                             Swal.fire('Agregado', 'El Usuario se agregó exitosamente.', 'success')
+                                 .then(() => location.reload());
+                         } else {
+
+                             Swal.fire('Error', `No se pudo agregar: ${data.message}`, 'error');
+                         }
+                     });
+                 }
+             });
+         });*/
+
+        // EDITAR Usuario
+        $(".edit-btn").click(async function () {
+            esEdicion = true;
+            const id = $(this).data("idusuario");
+            const idempleado = $(this).data("idempleado");
+            const codigo = $(this).data("codigo");
+            const username = $(this).data("username");
+            const userpassword = $(this).data("userpassword");
+            const isactive = $(this).data("isactive");
+
+            document.getElementById("modal-usuario-title").textContent = "Editar Usuario";
+            document.getElementById("input-id-usuario").value = id;
+
+            await cargarSelect('/Usuario/ListarEmpleado', 'select-empleado', 'idEmpleado', 'Nombre');
+
+      
+            document.getElementById("select-empleado").value = idempleado;
+            document.getElementById("input-codigo-usuario").value = codigo;
+            document.getElementById("input-username").value = username;
+            document.getElementById("input-password").value = userpassword;
+            document.getElementById("checkbox-activo").checked = isactive == 1 || isactive == "1" || isactive === true;
+
+            $('#crearUsuarioModal').modal('show');
+        });
+        // EDITAR
+        /*$(document).ready(function () {
+            $(".edit-btn").on("click", function () {
+                const id = $(this).data("idusuario");
+                const idempleado = $(this).data("idempleado");
+                const codigo = $(this).data("codigo");
+                const username = $(this).data("username");
+                const userpassword = $(this).data("userpassword");
+                const isactive = $(this).data("isactive");
+
+                Swal.fire({
+                    title: 'Editar Usuario',
+                    html: `
+                    <input id="swal-id" class="swal2-input" placeholder="Id Empleado" value="${idempleado}">
+                    <input id="swal-codigousuario" class="swal2-input" placeholder="Codigo Usuario" value="${codigo}">
+                    <input id="swal-username" class="swal2-input" placeholder="Username" value="${username}">
+                    <input id="swal-userpassword" class="swal2-input" placeholder="User Password" value="${userpassword}">
+                    <input id="swal-isactive" class="swal2-input" placeholder="IsActive" value="${isactive}">
+            `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar',
+                    preConfirm: () => {
+                        return {
+                            id: id,
+                            idempleado: document.getElementById('swal-id').value.trim(),
+                            codigousuario: document.getElementById('swal-codigousuario').value.trim(),
+                            username: document.getElementById('swal-username').value.trim(),
+                            userpassword: document.getElementById('swal-userpassword').value.trim(),
+                            isactive: document.getElementById('swal-isactive').value.trim()
+                        };
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/Usuario/EditarUsuario', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                            },
+                            body: JSON.stringify({
+                                IdUsuario: result.value.id,
+                                IdEmpleado: result.value.idempleado,
+                                CodigoUsuario: result.value.codigousuario,
+                                Username: result.value.username,
+                                UserPassword: result.value.userpassword,
+                                IsActive: result.value.isactive
+
+                            })
+                        }).then(async response => {
+                            if (response.ok) {
+                                Swal.fire('Actualizado', 'El Usuario ha sido modificado.', 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                const errorText = await response.text();
+                                Swal.fire('Error', `No se pudo actualizar: ${errorText}`, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });*/
+
+
+
+
+        // ELIMINAR
+        const deleteButtons = document.querySelectorAll(".delete-btn");
+        deleteButtons.forEach(button => {
+            button.addEventListener("click", function () {
+
+                const id = this.dataset.id;
+                const idempleado = this.dataset.idempleado;
+                const codigo = this.dataset.codigo;
+                const nombre = this.dataset.username;
+                const userpassword = this.dataset.userpassword;
+                const isactive = this.dataset.isactive;
+
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: `¿Deseas eliminar el Usuario "${nombre}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/Usuario/EliminarUsuario', { //Cambiar por la ruta
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(token && { 'RequestVerificationToken': token })
+                            },
+                            body: JSON.stringify({ IdUsuario: parseInt(id) })
+                        }).then(async response => {
+                            const data = await response.json();
+                            console.log(data);
+                            if (data.success) {
+                                Swal.fire('Eliminado', `El Usuario "${nombre}" ha sido eliminado.`, 'success')
+                                    .then(() => {
+                                        const row = document.querySelector(`button[data-id="${id}"]`).closest('tr');
+                                        row.remove();
+                                    });
+                            } else {
+                                Swal.fire('Error', `No se pudo eliminar: ${data.message}`, 'error');
+                            }
+                        }).catch(error => {
+                            console.log(error);
+                            Swal.fire('Error', 'Ocurrió un error al eliminar el usuario.', 'error');
+
+                        });
+                    }
+                });
+            });
+        });
+
+        // BUSCAR
+        document.getElementById("btn-buscar").addEventListener("click", async function () {
+            const id = document.getElementById("buscar-id").value.trim();
+            const url = `/Usuario/BuscarPorId?id=${id}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const tbody = document.querySelector("table tbody");
+            tbody.innerHTML = ""; // Limpiar la tabla
+
+            const roles = Array.isArray(data) ? data : [data];
+            debugger;
+
+            roles.forEach(rol => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${rol.IdUsuario}</td>
+                    <td>${rol.IdEmpleado}</td>
+                    <td>${rol.CodigoUsuario}</td>
+                    <td>${rol.Username}</td>
+
+                    <td>${rol.IsActive}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info edit-btn"
+                                data-idusuario="${rol.IdUsuario}"
+                                data-idempleado="${rol.IdEmpleado}"
+                                data-codigo="${rol.CodigoUsuario}"
+                                data-username="${rol.Username}"
+                                data-isactive="${rol.IsActive}">
+                            <i class="fa fa-pen"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-btn"
+                                data-idusuario="${rol.IdUsuario}"
+                                data-idempleado="${rol.IdEmpleado}"
+                                data-codigo="${rol.CodigoUsuario}"
+                                data-nombre="${rol.Username}"
+                                data-userpassword="${rol.UserPassword}"
+                                data-isactive="${rol.IsActive}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+
+        `;
+                tbody.appendChild(row);
+            });
+        });
+
+
+    });
+
+</script>
+<!-- Modal: Crear / Editar Usuario -->
+<div class="modal fade" id="crearUsuarioModal" tabindex="-1" role="dialog" aria-labelledby="crearUsuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="form-crear-usuario">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-usuario-title">Crear Nuevo Usuario</h5>
+                    <button type="button" class="close" data-dismiss="modal"onclick="$('#crearUsuarioModal').modal('hide');"></button> 
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Campo oculto para ID (en caso de edición) -->
+                    <input type="hidden" name="IdUsuario" id="input-id-usuario" />
+
+                    <!-- Empleado -->
+                    <label for="select-empleado">Empleado:</label>
+                    <select class="form-control" name="idEmpleado" id="select-empleado" required></select>
+
+                    <!-- Código Usuario -->
+                    <label for="input-codigo-usuario">Código de Usuario:</label>
+                    <input type="text" class="form-control" name="CodigoUsuario" id="input-codigo-usuario" required />
+
+                    <!-- Username -->
+                    <label for="input-username">Nombre de Usuario:</label>
+                    <input type="text" class="form-control" name="Username" id="input-username" required />
+
+                    <!-- Contraseña -->
+                    <label for="input-password">Contraseña:</label>
+                    <input type="password" class="form-control" name="UserPassword" id="input-password" required />
+
+                    <!-- Estado (Activo/Inactivo) -->
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="checkbox-activo" name="IsActive" value="1">
+                        <label class="form-check-label" for="checkbox-activo">
+                            Usuario activo
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="$('#crearUsuarioModal').modal('hide');">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
