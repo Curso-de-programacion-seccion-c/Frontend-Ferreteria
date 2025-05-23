@@ -10,6 +10,10 @@ namespace FerreteriaWebApp.Controllers
     {
         public ActionResult Index()
         {
+            if (Session["NombreUsuario"] == null)
+            {
+                return RedirectToAction("LoginView", "Auth");
+            }
             return View();
         }
 
@@ -27,4 +31,5 @@ namespace FerreteriaWebApp.Controllers
             return View();
         }
     }
+
 }

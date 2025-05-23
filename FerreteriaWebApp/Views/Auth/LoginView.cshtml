@@ -1,0 +1,67 @@
+﻿@{
+    ViewBag.Title = "LoginView";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="card mx-auto" style="max-width: 400px;">
+            <div class="card-body">
+                <h4 class="card-title text-center mb-4">Login</h4>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Usuario</label>
+                        <input type="text" class="form-control" id="Username" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" class="form-control" id="UserPassword" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Código Usuario</label>
+                        <input type="text" class="form-control" id="CodigoUsuario" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Ingresar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $('#loginForm').on('submit', function (e) {
+            e.preventDefault();
+
+            let data = {
+                Username: $('#Username').val(),
+                UserPassword: $('#UserPassword').val(),
+                CodigoUsuario: $('#CodigoUsuario').val()
+            };
+
+            $.ajax({
+                url: '/Auth/VerificarLogin',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    if (response.success) {
+                        window.location.href = '/Home/Index';
+                    } else {
+                        Swal.fire('Error', 'Credenciales incorrectas', 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error', 'Error al comunicarse con el servidor', 'error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

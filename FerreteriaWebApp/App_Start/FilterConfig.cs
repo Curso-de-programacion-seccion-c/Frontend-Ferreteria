@@ -1,5 +1,6 @@
 ﻿using System.Web;
 using System.Web.Mvc;
+using FerreteriaWebApp.Filters;
 
 namespace FerreteriaWebApp
 {
@@ -8,6 +9,7 @@ namespace FerreteriaWebApp
         public static void RegisterGlobalFilters(GlobalFilterCollection filters)
         {
             filters.Add(new HandleErrorAttribute());
+            filters.Add(new AuthFilterAttribute());
         }
     }
 }
