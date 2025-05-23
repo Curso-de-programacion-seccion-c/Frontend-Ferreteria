@@ -242,6 +242,99 @@
                 `;
                 tbody.appendChild(row);
             });
+
+            //Asociar eventos a los nuevos botones de editar y eliminar
+            document.querySelectorAll(".edit-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    const id = this.dataset.id;
+                    const nombre = this.dataset.nombre;
+                    const descripcion = this.dataset.descripcion;
+
+                    Swal.fire({
+                        title: 'Editar Forma de Pago',
+                        html: `
+                            <input id="swal-id" class="swal2-input" value="${id}" readonly />
+                            <input id="swal-nombre" class="swal2-input" value="${nombre}" placeholder="Nombre" />
+                            <input id="swal-descripcion" class="swal2-input" value="${descripcion}" placeholder="Descripción" />
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Guardar',
+                        cancelButtonText: 'Cancelar',
+                        preConfirm: () => {
+                            const nuevoNombre = document.getElementById('swal-nombre').value.trim();
+                            const nuevaDescripcion = document.getElementById('swal-descripcion').value.trim();
+                            if (!nuevoNombre || !nuevaDescripcion) {
+                                Swal.showValidationMessage("Nombre y Descripción no pueden estar vacíos.");
+                                return false;
+                            }
+
+                            return {
+                                IdFormaPago: parseInt(id),
+                                NombreFormaPago: nuevoNombre,
+                                Descripcion: nuevaDescripcion
+                            };
+                        }
+                    }).then(result => {
+                        if (result.isConfirmed) {
+                            fetch('/FormaPago/ActualizarFormaPago', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'RequestVerificationToken': token
+                                },
+                                body: JSON.stringify(result.value)
+                            }).then(async response => {
+                                if (response.ok) {
+                                    Swal.fire('Actualizado', 'Forma de pago actualizada.', 'success')
+                                        .then(() => location.reload());
+                                } else {
+                                    const errorText = await response.text();
+                                    Swal.fire('Error', `No se pudo actualizar: ${errorText}`, 'error');
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+
+            document.querySelectorAll(".delete-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    const id = this.dataset.id;
+                    const nombre = this.dataset.descripcion;
+                    const descripcion = this.dataset.nombre;
+                    Swal.fire({
+                        title: '¿Estás seguro?',
+                        text: `¿Deseas eliminar la forma de pago "${nombre}"?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then(result => {
+                        if (result.isConfirmed) {
+                            fetch('/FormaPago/EliminarFormaPago', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    ...(token && { 'RequestVerificationToken': token })
+                                },
+                                body: JSON.stringify({ IdFormaPago: parseInt(id) })
+                            }).then(async response => {
+                                const data = await response.json();
+                                if (data.success) {
+                                    Swal.fire('Eliminado', `Forma de Pago "${nombre}" eliminada.`, 'success')
+                                        .then(() => location.reload());
+                                } else {
+                                    Swal.fire('Error', `No se pudo eliminar: ${data.message}`, 'error');
+                                }
+                            }).catch(() => {
+                                Swal.fire('Error', 'Error al eliminar la forma de pago.', 'error');
+                            });
+                        }
+                    });
+                });
+            });
         });
     });
 </script>

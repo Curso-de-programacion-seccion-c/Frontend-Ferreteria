@@ -71,15 +71,14 @@
 
         let esEdicion = false; // Estado para distinguir la acción actual
 
-        document.querySelectorAll('#form-crear-factura .btn-secondary').forEach(btn => {
+        // Alternativa: Script más general que funciona para cualquier modal
+        document.querySelectorAll('.modal .btn-secondary, .modal .close').forEach(btn => {
             btn.addEventListener('click', function () {
-                $('#form-crear-factura').modal('hide');
-            });
-        });
-
-        document.querySelectorAll('#form-eliminar-factura .btn-secondary').forEach(btn => {
-            btn.addEventListener('click', function () {
-                $('#form-eliminar-factura').modal('hide');
+                // Encontrar el modal padre más cercano
+                const modal = btn.closest('.modal');
+                if (modal) {
+                    $(modal).modal('hide');
+                }
             });
         });
 
@@ -297,7 +296,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-success" id="btn-guardar-factura">Guardar</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" id="cancelar-modal" data-dismiss="modal">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -323,7 +322,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-danger">Eliminar</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" id="cancelar-modal" data-dismiss="modal">Cancelar</button>
                 </div>
             </div>
         </form>

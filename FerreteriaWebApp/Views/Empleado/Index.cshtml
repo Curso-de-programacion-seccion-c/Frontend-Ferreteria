@@ -178,12 +178,14 @@
         const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
         let esEdicion = false;
 
-        document.querySelectorAll(".btn-secondary").forEach(btn => {
-            btn.addEventListener("click", function () {
-                document.getElementById("form-empleado").reset();
-                $("#modalEmpleado").modal("hide");
-                $("#eliminarEmpleado").modal("hide");
-                esEdicion = false;
+        // Alternativa: Script más general que funciona para cualquier modal
+        document.querySelectorAll('.modal .btn-secondary, .modal .close').forEach(btn => {
+            btn.addEventListener('click', function () {
+                // Encontrar el modal padre más cercano
+                const modal = btn.closest('.modal');
+                if (modal) {
+                    $(modal).modal('hide');
+                }
             });
         });
 

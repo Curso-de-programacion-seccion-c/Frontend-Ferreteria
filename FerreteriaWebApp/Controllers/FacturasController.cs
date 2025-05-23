@@ -32,7 +32,7 @@ namespace FerreteriaWebApp.Controllers
 
                 return View("Index", resp.data);
             }
-            return View();
+            return View("Index", new List<ListarFacturas>());
         }
 
         public async Task<JsonResult> ListarEmpleado()
