@@ -136,6 +136,12 @@
             });
         });
 
+        document.querySelectorAll('#eliminarDetalleModal .btn-secondary').forEach(btn => {
+            btn.addEventListener('click', function () {
+                $('#eliminarDetalleModal').modal('hide');
+            });
+        });
+
         async function cargarSelect(url, selectId, valueField, textField) {
             const response = await fetch(url);
             const data = await response.json();
@@ -168,9 +174,13 @@
 
         document.querySelectorAll(".edit-btn").forEach(btn => {
             btn.addEventListener("click", async function () {
+                idDetalleEdicion = this.dataset.id;
+
                 const idDetalle = this.dataset.id;
                 const idArticulo = this.dataset.idarticulo;
                 const cantidad = this.dataset.cantidad;
+
+                esEdicion = true;
 
                 document.getElementById("modal-detalle-factura-title").textContent = "Editar Detalle";
                 document.getElementById("input-id-detalle").value = idDetalle;
@@ -294,6 +304,35 @@
                     </td>
                 `;
                 tbody.appendChild(row);
+            });
+
+            // Asociar eventos a los nuevos botones de editar y eliminar
+            document.querySelectorAll(".edit-btn").forEach(btn => {
+                btn.addEventListener("click", async function () {
+                    idDetalleEdicion = this.dataset.id;
+                    const idDetalle = this.dataset.id;
+                    const idArticulo = this.dataset.idarticulo;
+                    const cantidad = this.dataset.cantidad;
+                    esEdicion = true;
+
+                    document.getElementById("modal-detalle-factura-title").textContent = "Editar Detalle";
+                    document.getElementById("input-id-detalle").value = idDetalle;
+                    document.getElementById("input-cantidad").value = cantidad;
+
+                    await cargarSelect('/Facturas/ListarArticulos', 'select-articulo', 'IdArticulo', 'NombreArticulo');
+
+                    document.getElementById("select-articulo").value = idArticulo;
+                    $('#crearDetalleFacturaModal').modal('show');
+                });
+            });
+
+            document.querySelectorAll(".btn-eliminar").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const idDetalle = this.dataset.id;
+                    document.getElementById("detalle-id-eliminar").textContent = idDetalle;
+                    document.getElementById("input-id-eliminar").value = idDetalle;
+                    $('#eliminarDetalleModal').modal('show');
+                });
             });
         });
 

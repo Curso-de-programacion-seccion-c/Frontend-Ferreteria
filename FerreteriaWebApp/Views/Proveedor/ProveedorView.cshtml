@@ -281,8 +281,112 @@
                         </button>
                     </td>
 
-        `;
+                `;
                 tbody.appendChild(row);
+            });
+
+            // Reasignar los eventos de click a los nuevos botones
+            const deleteButtons = document.querySelectorAll(".delete-btn");
+            deleteButtons.forEach(button => {
+                button.addEventListener("click", function () {
+                    const id = this.dataset.id;
+                    const nombre = this.dataset.nombre;
+                    const telefono = this.dataset.telefono;
+                    const nombrecontacto = this.dataset.nombrecontacto;
+
+                    Swal.fire({
+                        title: '¿Estás seguro?',
+                        text: `¿Deseas eliminar el proveedor "${nombre}"?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch('/Proveedor/EliminarProveedor', { //Cambiar por la ruta
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    ...(token && { 'RequestVerificationToken': token })
+                                },
+                                body: JSON.stringify({ IdProveedor: parseInt(id) })
+                            }).then(async response => {
+                                const data = await response.json();
+                                console.log(data);
+                                if (data.success) {
+                                    Swal.fire('Eliminado', `El Proveedor "${nombre}" ha sido eliminado.`, 'success')
+                                        .then(() => {
+                                            const row = document.querySelector(`button[data-id="${id}"]`).closest('tr');
+                                            row.remove();
+                                        });
+                                } else {
+                                    Swal.fire('Error', `No se pudo eliminar: ${data.message}`, 'error');
+                                }
+                            }).catch(error => {
+                                console.log(error);
+                                Swal.fire('Error', 'Ocurrió un error al eliminar el proveedor.', 'error');
+
+                            });
+                        }
+                    });
+                });
+            });
+
+            const editButtons = document.querySelectorAll(".edit-btn");
+
+            editButtons.forEach(button => {
+                button.addEventListener("click", function () {
+                    const id = this.dataset.id;
+                    const nombre = this.dataset.nombre;
+                    const telefono = this.dataset.telefono;
+                    const nombrecontacto = this.dataset.nombrecontacto;
+
+                    Swal.fire({
+                        title: 'Editar Proveedor',
+                        html: `
+                            <input id="swal-nombreproveedor" class="swal2-input" placeholder="Nombre Proveedor" value="${nombre}">
+                            <input id="swal-telefono" class="swal2-input" placeholder="Teléfono" value="${telefono}">
+                            <input id="swal-nombrecontacto" class="swal2-input" placeholder="Nombre Contacto" value="${nombrecontacto}">
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Guardar',
+                        preConfirm: () => {
+                            return {
+                                id: id,
+                                nombre: document.getElementById('swal-nombreproveedor').value.trim(),
+                                telefono: document.getElementById('swal-telefono').value.trim(),
+                                nombrecontacto: document.getElementById('swal-nombrecontacto').value.trim()
+                            };
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch('/Proveedor/EditarProveedor', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                                },
+                                body: JSON.stringify({
+                                    IdProveedor: result.value.id,
+                                    NombreProveedor: result.value.nombre,
+                                    Telefono: result.value.telefono,
+                                    NombreContacto: result.value.nombrecontacto
+                                })
+                            }).then(async response => {
+                                if (response.ok) {
+                                    Swal.fire('Actualizado', 'El proveedor ha sido modificado.', 'success').then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    const errorText = await response.text();
+                                    Swal.fire('Error', `No se pudo actualizar: ${errorText}`, 'error');
+                                }
+                            });
+                        }
+                    });
+                });
             });
         });
 
