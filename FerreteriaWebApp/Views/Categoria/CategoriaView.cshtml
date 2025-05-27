@@ -43,130 +43,129 @@
     </tbody>
 </table>
 
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            // Crear
-            $('#btnNuevaCategoria').click(function () {
-                Swal.fire({
-                    title: 'Nueva Categoría',
-                    input: 'text',
-                    inputLabel: 'Nombre',
-                    inputPlaceholder: 'Ej: Herramientas',
-                    showCancelButton: true,
-                    confirmButtonText: 'Crear',
-                    cancelButtonText: 'Cancelar',
-                    preConfirm: (nombre) => {
-                        if (!nombre) {
-                            Swal.showValidationMessage('El nombre es requerido');
-                        }
-                        return nombre;
+<script>
+    $(document).ready(function () {
+        // Crear
+        $('#btnNuevaCategoria').click(function () {
+            Swal.fire({
+                title: 'Nueva Categoría',
+                input: 'text',
+                inputLabel: 'Nombre',
+                inputPlaceholder: 'Ej: Herramientas',
+                showCancelButton: true,
+                confirmButtonText: 'Crear',
+                cancelButtonText: 'Cancelar',
+                preConfirm: (nombre) => {
+                    if (!nombre) {
+                        Swal.showValidationMessage('El nombre es requerido');
                     }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.post('@Url.Action("CrearCategoria", "Categoria")', { nombreCategoria: result.value })
-                            .done(() => {
-                                Swal.fire('Éxito', 'Categoría creada correctamente', 'success').then(() => {
-                                    location.reload();
-                                });
-                            })
-                            .fail(() => {
-                                Swal.fire('Error', 'No se pudo crear la categoría', 'error');
-                            });
-                    }
-                });
-            });
-
-            // Editar
-            $('.btnEditar').click(function () {
-                const id = $(this).data('id');
-                const nombre = $(this).data('nombre');
-
-                Swal.fire({
-                    title: 'Editar Categoría',
-                    input: 'text',
-                    inputLabel: 'Nuevo nombre',
-                    inputValue: nombre,
-                    showCancelButton: true,
-                    confirmButtonText: 'Actualizar',
-                    cancelButtonText: 'Cancelar',
-                    preConfirm: (nuevoNombre) => {
-                        if (!nuevoNombre) {
-                            Swal.showValidationMessage('El nombre no puede estar vacío');
-                        }
-                        return nuevoNombre;
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.post('@Url.Action("EditarCategoria", "Categoria")', {
-                            idCategoria: id,
-                            nombreCategoria: result.value
-                        }).done(() => {
-                            Swal.fire('Actualizado', 'Categoría modificada correctamente', 'success').then(() => {
+                    return nombre;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("CrearCategoria", "Categoria")', { nombreCategoria: result.value })
+                        .done(() => {
+                            Swal.fire('Éxito', 'Categoría creada correctamente', 'success').then(() => {
                                 location.reload();
                             });
-                        }).fail(() => {
-                            Swal.fire('Error', 'No se pudo actualizar la categoría', 'error');
-                        });
-                    }
-                });
-            });
-
-            // Eliminar
-            $('.btnEliminar').click(function () {
-                const id = $(this).data('id');
-
-                Swal.fire({
-                    title: '¿Eliminar categoría?',
-                    text: "Esta acción no se puede deshacer.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, eliminar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.post('@Url.Action("EliminarCategoria", "Categoria")', { idCategoria: id })
-                            .done(() => {
-                                Swal.fire('Eliminada', 'Categoría eliminada con éxito', 'success').then(() => {
-                                    location.reload();
-                                });
-                            })
-                            .fail(() => {
-                                Swal.fire('Error', 'No se pudo eliminar la categoría', 'error');
-                            });
-                    }
-                });
-            });
-
-            // Buscar por ID
-            $('#btnBuscar').click(function () {
-                const id = $('#buscar-id').val();
-                if (!id) {
-                    Swal.fire('Atención', 'Ingrese un ID para buscar.', 'warning');
-                    return;
-                }
-
-                $.post('@Url.Action("BuscarPorId", "Categoria")', { idCategoria: id })
-                    .done((data) => {
-                        document.open();
-                        document.write(data);
-                        document.close();
-                    }).fail(() => {
-                        Swal.fire('Error', 'Error al buscar categoría.', 'error');
-                    });
-            });
-
-            // Recargar toda la lista si se borra el número
-            $('#buscar-id').on('input', function () {
-                if ($(this).val() === '') {
-                    $.post('@Url.Action("BuscarPorId", "Categoria")', { idCategoria: '' })
-                        .done((data) => {
-                            document.open();
-                            document.write(data);
-                            document.close();
+                        })
+                        .fail(() => {
+                            Swal.fire('Error', 'No se pudo crear la categoría', 'error');
                         });
                 }
             });
         });
-    </script>
-}
+
+        // Editar
+        $('.btnEditar').click(function () {
+            const id = $(this).data('id');
+            const nombre = $(this).data('nombre');
+
+            Swal.fire({
+                title: 'Editar Categoría',
+                input: 'text',
+                inputLabel: 'Nuevo nombre',
+                inputValue: nombre,
+                showCancelButton: true,
+                confirmButtonText: 'Actualizar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: (nuevoNombre) => {
+                    if (!nuevoNombre) {
+                        Swal.showValidationMessage('El nombre no puede estar vacío');
+                    }
+                    return nuevoNombre;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("EditarCategoria", "Categoria")', {
+                        idCategoria: id,
+                        nombreCategoria: result.value
+                    }).done(() => {
+                        Swal.fire('Actualizado', 'Categoría modificada correctamente', 'success').then(() => {
+                            location.reload();
+                        });
+                    }).fail(() => {
+                        Swal.fire('Error', 'No se pudo actualizar la categoría', 'error');
+                    });
+                }
+            });
+        });
+
+        // Eliminar
+        $('.btnEliminar').click(function () {
+            const id = $(this).data('id');
+
+            Swal.fire({
+                title: '¿Eliminar categoría?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("EliminarCategoria", "Categoria")', { idCategoria: id })
+                        .done(() => {
+                            Swal.fire('Eliminada', 'Categoría eliminada con éxito', 'success').then(() => {
+                                location.reload();
+                            });
+                        })
+                        .fail(() => {
+                            Swal.fire('Error', 'No se pudo eliminar la categoría', 'error');
+                        });
+                }
+            });
+        });
+
+        // Buscar por ID
+        $('#btnBuscar').click(function () {
+            const id = $('#buscar-id').val();
+            if (!id) {
+                Swal.fire('Atención', 'Ingrese un ID para buscar.', 'warning');
+                return;
+            }
+
+            $.post('@Url.Action("BuscarPorId", "Categoria")', { idCategoria: id })
+                .done((data) => {
+                    document.open();
+                    document.write(data);
+                    document.close();
+                }).fail(() => {
+                    Swal.fire('Error', 'Error al buscar categoría.', 'error');
+                });
+        });
+
+        // Recargar toda la lista si se borra el número
+        $('#buscar-id').on('input', function () {
+            if ($(this).val() === '') {
+                $.post('@Url.Action("BuscarPorId", "Categoria")', { idCategoria: '' })
+                    .done((data) => {
+                        document.open();
+                        document.write(data);
+                        document.close();
+                    });
+            }
+        });
+    });
+</script>
+
