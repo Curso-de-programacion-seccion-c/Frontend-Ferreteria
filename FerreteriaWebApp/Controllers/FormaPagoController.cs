@@ -28,7 +28,7 @@ namespace FerreteriaWebApp.Controllers
 
                 return View("Index", resp.result);
             }
-            return View();
+            return View("Index", new List<FormaPagoModel>());
         }
 
         [HttpPost]
